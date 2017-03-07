@@ -1,0 +1,2181 @@
+name: "alexnet"
+
+input: "data"
+input_shape {
+  dim: 1
+  dim: 3
+  dim: 224
+  dim: 224
+}
+
+#========= alexnet conv1-conv5 ============
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1"
+  param { lr_mult: 1 }
+  param { lr_mult: 2 }
+  convolution_param {
+    num_output: 96
+    kernel_size: 11
+    stride: 4
+  }
+}
+
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "conv1"
+  top: "conv1"
+}
+
+layer {
+  name: "norm1"
+  type: "LRN"
+  bottom: "conv1"
+  top: "norm1"
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layer {
+  name: "pool1"
+  type: "Pooling"
+  bottom: "norm1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  param { lr_mult: 1 }
+  param { lr_mult: 2 }
+  convolution_param {
+    num_output: 256
+    pad: 2
+    kernel_size: 5
+    # group: 2
+  }
+}
+layer {
+  name: "relu2"
+  type: "ReLU"
+  bottom: "conv2"
+  top: "conv2"
+}
+layer {
+  name: "norm2"
+  type: "LRN"
+  bottom: "conv2"
+  top: "norm2"
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "norm2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "conv3"
+  param { lr_mult: 1 }
+  param { lr_mult: 2 }
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+  }
+}
+layer {
+  name: "relu3"
+  type: "ReLU"
+  bottom: "conv3"
+  top: "conv3"
+}
+layer {
+  name: "conv4"
+  type: "Convolution"
+  bottom: "conv3"
+  top: "conv4"
+  param { lr_mult: 1 }
+  param { lr_mult: 2 }
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    # group: 2
+  }
+}
+layer {
+  name: "relu4"
+  type: "ReLU"
+  bottom: "conv4"
+  top: "conv4"
+}
+layer {
+  name: "conv5"
+  type: "Convolution"
+  bottom: "conv4"
+  top: "conv5"
+  param { lr_mult: 1 }
+  param { lr_mult: 2 }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    # group: 2
+  }
+}
+layer {
+  name: "relu5"
+  type: "ReLU"
+  bottom: "conv5"
+  top: "conv5"
+}
+layer {
+  name: "pool5"
+  type: "Pooling"
+  bottom: "conv5"
+  top: "pool5"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+#========= grid pooling to fixed size 6 * 6 ============
+
+layer {
+  name: "grid_pool_conv5"
+  type: "GRIDPooling"
+  bottom: "pool5"
+  top: "grid_pool_conv5"
+  grid_pooling_param {
+    pooled_w: 5
+    pooled_h: 5
+  }
+}
+
+#========= part shared convolutions =========
+layer {
+  name: "part_shared_conv1"
+  bottom: "grid_pool_conv5"
+  top: "part_shared_conv1"
+  type: "Convolution"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    # num_output: 128
+    num_output: 512
+    kernel_size: 3 pad: 1 stride: 1
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer{
+  name: "part_shared_relu1"
+  bottom: "part_shared_conv1"
+  top: "part_shared_conv1"
+  type: "ReLU"
+}
+
+layer {
+  name: "part_shared_conv2"
+  bottom: "part_shared_conv1"
+  top: "part_shared_conv2"
+  type: "Convolution"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    #num_output: 256
+    num_output: 512
+    kernel_size: 3 pad: 1 stride: 1
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer{
+  name: "part_shared_relu2"
+  bottom: "part_shared_conv2"
+  top: "part_shared_conv2"
+  type: "ReLU"
+}
+
+#========= attribute group 1 - group 9 =========
+#== group 1, loss of Male attr ==
+layer {
+  name: "male_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "male_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "male_relu"
+  type: "ReLU"
+  bottom: "male_attr"
+  top: "male_attr"
+}
+
+layer {
+  name: "male_dropout"
+  type: "Dropout"
+  bottom: "male_attr"
+  top: "male_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "male_score"
+  type: "InnerProduct"
+  bottom: "male_attr"
+  top: "male_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "male_prob"
+  type: "Softmax"
+  bottom: "male_score"
+  top: "male_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 2, loss of Big_Nose attr ==
+layer {
+  name: "big_nose_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "big_nose_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "big_nose_relu"
+  type: "ReLU"
+  bottom: "big_nose_attr"
+  top: "big_nose_attr"
+}
+
+layer {
+  name: "big_nose_dropout"
+  type: "Dropout"
+  bottom: "big_nose_attr"
+  top: "big_nose_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "big_nose_score"
+  type: "InnerProduct"
+  bottom: "big_nose_attr"
+  top: "big_nose_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "big_nose_prob"
+  type: "Softmax"
+  bottom: "big_nose_score"
+  top: "big_nose_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 2, loss of Pointly_Nose attr ==
+layer {
+  name: "pointly_nose_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "pointly_nose_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "pointly_nose_relu"
+  type: "ReLU"
+  bottom: "pointly_nose_attr"
+  top: "pointly_nose_attr"
+}
+
+layer {
+  name: "pointly_nose_dropout"
+  type: "Dropout"
+  bottom: "pointly_nose_attr"
+  top: "pointly_nose_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "pointly_nose_score"
+  type: "InnerProduct"
+  bottom: "pointly_nose_attr"
+  top: "pointly_nose_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "pointly_nose_prob"
+  type: "Softmax"
+  bottom: "pointly_nose_score"
+  top: "pointly_nose_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 3, loss of Big_Lips attr ==
+layer {
+  name: "big_lips_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "big_lips_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "big_lips_relu"
+  type: "ReLU"
+  bottom: "big_lips_attr"
+  top: "big_lips_attr"
+}
+
+layer {
+  name: "big_lips_dropout"
+  type: "Dropout"
+  bottom: "big_lips_attr"
+  top: "big_lips_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "big_lips_score"
+  type: "InnerProduct"
+  bottom: "big_lips_attr"
+  top: "big_lips_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "big_lips_prob"
+  type: "Softmax"
+  bottom: "big_lips_score"
+  top: "big_lips_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 3, loss of Smiling attr ==
+layer {
+  name: "smiling_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "smiling_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "smiling_relu"
+  type: "ReLU"
+  bottom: "smiling_attr"
+  top: "smiling_attr"
+}
+
+layer {
+  name: "smiling_dropout"
+  type: "Dropout"
+  bottom: "smiling_attr"
+  top: "smiling_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "smiling_score"
+  type: "InnerProduct"
+  bottom: "smiling_attr"
+  top: "smiling_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "smiling_prob"
+  type: "Softmax"
+  bottom: "smiling_score"
+  top: "smiling_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 3, loss of Wearing_Lipstick attr ==
+layer {
+  name: "wearing_lipstick_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "wearing_lipstick_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "wearing_lipstick_relu"
+  type: "ReLU"
+  bottom: "wearing_lipstick_attr"
+  top: "wearing_lipstick_attr"
+}
+
+layer {
+  name: "wearing_lipstick_dropout"
+  type: "Dropout"
+  bottom: "wearing_lipstick_attr"
+  top: "wearing_lipstick_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_lipstick_score"
+  type: "InnerProduct"
+  bottom: "wearing_lipstick_attr"
+  top: "wearing_lipstick_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_lipstick_prob"
+  type: "Softmax"
+  bottom: "wearing_lipstick_score"
+  top: "wearing_lipstick_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 3, loss of Mouth_Slightly_Open attr ==
+layer {
+  name: "mouth_slightly_open_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "mouth_slightly_open_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "mouth_slightly_open_relu"
+  type: "ReLU"
+  bottom: "mouth_slightly_open_attr"
+  top: "mouth_slightly_open_attr"
+}
+
+layer {
+  name: "mouth_slightly_open_dropout"
+  type: "Dropout"
+  bottom: "mouth_slightly_open_attr"
+  top: "mouth_slightly_open_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "mouth_slightly_open_score"
+  type: "InnerProduct"
+  bottom: "mouth_slightly_open_attr"
+  top: "mouth_slightly_open_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "mouth_slightly_open_prob"
+  type: "Softmax"
+  bottom: "mouth_slightly_open_score"
+  top: "mouth_slightly_open_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Arched_Eyebrows attr ==
+layer {
+  name: "arched_eyebrows_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "arched_eyebrows_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "arched_eyebrows_relu"
+  type: "ReLU"
+  bottom: "arched_eyebrows_attr"
+  top: "arched_eyebrows_attr"
+}
+
+layer {
+  name: "arched_eyebrows_dropout"
+  type: "Dropout"
+  bottom: "arched_eyebrows_attr"
+  top: "arched_eyebrows_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "arched_eyebrows_score"
+  type: "InnerProduct"
+  bottom: "arched_eyebrows_attr"
+  top: "arched_eyebrows_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "arched_eyebrows_prob"
+  type: "Softmax"
+  bottom: "arched_eyebrows_score"
+  top: "arched_eyebrows_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Bags_Under_eyes attr ==
+layer {
+  name: "bags_under_eyes_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "bags_under_eyes_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "bags_under_eyes_relu"
+  type: "ReLU"
+  bottom: "bags_under_eyes_attr"
+  top: "bags_under_eyes_attr"
+}
+
+layer {
+  name: "bags_under_eyes_dropout"
+  type: "Dropout"
+  bottom: "bags_under_eyes_attr"
+  top: "bags_under_eyes_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "bags_under_eyes_score"
+  type: "InnerProduct"
+  bottom: "bags_under_eyes_attr"
+  top: "bags_under_eyes_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "bags_under_eyes_prob"
+  type: "Softmax"
+  bottom: "bags_under_eyes_score"
+  top: "bags_under_eyes_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Bushy_Eyebrows attr ==
+layer {
+  name: "bushy_eyebrows_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "bushy_eyebrows_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "bushy_eyebrows_relu"
+  type: "ReLU"
+  bottom: "bushy_eyebrows_attr"
+  top: "bushy_eyebrows_attr"
+}
+
+layer {
+  name: "bushy_eyebrows_dropout"
+  type: "Dropout"
+  bottom: "bushy_eyebrows_attr"
+  top: "bushy_eyebrows_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "bushy_eyebrows_score"
+  type: "InnerProduct"
+  bottom: "bushy_eyebrows_attr"
+  top: "bushy_eyebrows_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "bushy_eyebrows_prob"
+  type: "Softmax"
+  bottom: "bushy_eyebrows_score"
+  top: "bushy_eyebrows_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Narrow_Eyes attr ==
+layer {
+  name: "narrow_eyes_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "narrow_eyes_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "narrow_eyes_relu"
+  type: "ReLU"
+  bottom: "narrow_eyes_attr"
+  top: "narrow_eyes_attr"
+}
+
+layer {
+  name: "narrow_eyes_dropout"
+  type: "Dropout"
+  bottom: "narrow_eyes_attr"
+  top: "narrow_eyes_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "narrow_eyes_score"
+  type: "InnerProduct"
+  bottom: "narrow_eyes_attr"
+  top: "narrow_eyes_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "narrow_eyes_prob"
+  type: "Softmax"
+  bottom: "narrow_eyes_score"
+  top: "narrow_eyes_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Eyeglasses attr ==
+layer {
+  name: "eyeglasses_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "eyeglasses_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "eyeglasses_relu"
+  type: "ReLU"
+  bottom: "eyeglasses_attr"
+  top: "eyeglasses_attr"
+}
+
+layer {
+  name: "eyeglasses_dropout"
+  type: "Dropout"
+  bottom: "eyeglasses_attr"
+  top: "eyeglasses_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "eyeglasses_score"
+  type: "InnerProduct"
+  bottom: "eyeglasses_attr"
+  top: "eyeglasses_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "eyeglasses_prob"
+  type: "Softmax"
+  bottom: "eyeglasses_score"
+  top: "eyeglasses_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Attractive attr ==
+layer {
+  name: "attractive_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "attractive_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "attractive_relu"
+  type: "ReLU"
+  bottom: "attractive_attr"
+  top: "attractive_attr"
+}
+
+layer {
+  name: "attractive_dropout"
+  type: "Dropout"
+  bottom: "attractive_attr"
+  top: "attractive_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "attractive_score"
+  type: "InnerProduct"
+  bottom: "attractive_attr"
+  top: "attractive_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "attractive_prob"
+  type: "Softmax"
+  bottom: "attractive_score"
+  top: "attractive_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Blurry attr ==
+layer {
+  name: "blurry_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "blurry_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "blurry_relu"
+  type: "ReLU"
+  bottom: "blurry_attr"
+  top: "blurry_attr"
+}
+
+layer {
+  name: "blurry_dropout"
+  type: "Dropout"
+  bottom: "blurry_attr"
+  top: "blurry_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "blurry_score"
+  type: "InnerProduct"
+  bottom: "blurry_attr"
+  top: "blurry_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "blurry_prob"
+  type: "Softmax"
+  bottom: "blurry_score"
+  top: "blurry_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Oval_Face attr ==
+layer {
+  name: "oval_face_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "oval_face_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "oval_face_relu"
+  type: "ReLU"
+  bottom: "oval_face_attr"
+  top: "oval_face_attr"
+}
+
+layer {
+  name: "oval_face_dropout"
+  type: "Dropout"
+  bottom: "oval_face_attr"
+  top: "oval_face_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "oval_face_score"
+  type: "InnerProduct"
+  bottom: "oval_face_attr"
+  top: "oval_face_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "oval_face_prob"
+  type: "Softmax"
+  bottom: "oval_face_score"
+  top: "oval_face_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Pale_Skin attr ==
+layer {
+  name: "pale_skin_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "pale_skin_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "pale_skin_relu"
+  type: "ReLU"
+  bottom: "pale_skin_attr"
+  top: "pale_skin_attr"
+}
+
+layer {
+  name: "pale_skin_dropout"
+  type: "Dropout"
+  bottom: "pale_skin_attr"
+  top: "pale_skin_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "pale_skin_score"
+  type: "InnerProduct"
+  bottom: "pale_skin_attr"
+  top: "pale_skin_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "pale_skin_prob"
+  type: "Softmax"
+  bottom: "pale_skin_score"
+  top: "pale_skin_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Young attr ==
+layer {
+  name: "young_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "young_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "young_relu"
+  type: "ReLU"
+  bottom: "young_attr"
+  top: "young_attr"
+}
+
+layer {
+  name: "young_dropout"
+  type: "Dropout"
+  bottom: "young_attr"
+  top: "young_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "young_score"
+  type: "InnerProduct"
+  bottom: "young_attr"
+  top: "young_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "young_prob"
+  type: "Softmax"
+  bottom: "young_score"
+  top: "young_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Heavy_Makeup attr ==
+layer {
+  name: "heavy_makeup_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "heavy_makeup_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "heavy_makeup_relu"
+  type: "ReLU"
+  bottom: "heavy_makeup_attr"
+  top: "heavy_makeup_attr"
+}
+
+layer {
+  name: "heavy_makeup_dropout"
+  type: "Dropout"
+  bottom: "heavy_makeup_attr"
+  top: "heavy_makeup_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "heavy_makeup_score"
+  type: "InnerProduct"
+  bottom: "heavy_makeup_attr"
+  top: "heavy_makeup_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "heavy_makeup_prob"
+  type: "Softmax"
+  bottom: "heavy_makeup_score"
+  top: "heavy_makeup_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Black_Hair attr ==
+layer {
+  name: "black_hair_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "black_hair_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "black_hair_relu"
+  type: "ReLU"
+  bottom: "black_hair_attr"
+  top: "black_hair_attr"
+}
+
+layer {
+  name: "black_hair_dropout"
+  type: "Dropout"
+  bottom: "black_hair_attr"
+  top: "black_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "black_hair_score"
+  type: "InnerProduct"
+  bottom: "black_hair_attr"
+  top: "black_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "black_hair_prob"
+  type: "Softmax"
+  bottom: "black_hair_score"
+  top: "black_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+#== group 6, loss of Blond_Hair attr ==
+layer {
+  name: "blond_hair_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "blond_hair_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "blond_hair_relu"
+  type: "ReLU"
+  bottom: "blond_hair_attr"
+  top: "blond_hair_attr"
+}
+
+layer {
+  name: "blond_hair_dropout"
+  type: "Dropout"
+  bottom: "blond_hair_attr"
+  top: "blond_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "blond_hair_score"
+  type: "InnerProduct"
+  bottom: "blond_hair_attr"
+  top: "blond_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "blond_hair_prob"
+  type: "Softmax"
+  bottom: "blond_hair_score"
+  top: "blond_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Brown_Hair attr ==
+layer {
+  name: "brown_hair_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "brown_hair_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "brown_hair_relu"
+  type: "ReLU"
+  bottom: "brown_hair_attr"
+  top: "brown_hair_attr"
+}
+
+layer {
+  name: "brown_hair_dropout"
+  type: "Dropout"
+  bottom: "brown_hair_attr"
+  top: "brown_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "brown_hair_score"
+  type: "InnerProduct"
+  bottom: "brown_hair_attr"
+  top: "brown_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "brown_hair_prob"
+  type: "Softmax"
+  bottom: "brown_hair_score"
+  top: "brown_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+#== group 6, loss of Gray_Hair attr ==
+layer {
+  name: "gray_hair_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "gray_hair_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "gray_hair_relu"
+  type: "ReLU"
+  bottom: "gray_hair_attr"
+  top: "gray_hair_attr"
+}
+
+layer {
+  name: "gray_hair_dropout"
+  type: "Dropout"
+  bottom: "gray_hair_attr"
+  top: "gray_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "gray_hair_score"
+  type: "InnerProduct"
+  bottom: "gray_hair_attr"
+  top: "gray_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "gray_hair_prob"
+  type: "Softmax"
+  bottom: "gray_hair_score"
+  top: "gray_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wearing_Earrings attr ==
+layer {
+  name: "wearing_earrings_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "wearing_earrings_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "wearing_earrings_relu"
+  type: "ReLU"
+  bottom: "wearing_earrings_attr"
+  top: "wearing_earrings_attr"
+}
+
+layer {
+  name: "wearing_earrings_dropout"
+  type: "Dropout"
+  bottom: "wearing_earrings_attr"
+  top: "wearing_earrings_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_earrings_score"
+  type: "InnerProduct"
+  bottom: "wearing_earrings_attr"
+  top: "wearing_earrings_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_earrings_prob"
+  type: "Softmax"
+  bottom: "wearing_earrings_score"
+  top: "wearing_earrings_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wearing_Necklace attr ==
+layer {
+  name: "wearing_necklace_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "wearing_necklace_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "wearing_necklace_relu"
+  type: "ReLU"
+  bottom: "wearing_necklace_attr"
+  top: "wearing_necklace_attr"
+}
+
+layer {
+  name: "wearing_necklace_dropout"
+  type: "Dropout"
+  bottom: "wearing_necklace_attr"
+  top: "wearing_necklace_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_necklace_score"
+  type: "InnerProduct"
+  bottom: "wearing_necklace_attr"
+  top: "wearing_necklace_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_necklace_prob"
+  type: "Softmax"
+  bottom: "wearing_necklace_score"
+  top: "wearing_necklace_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wearing_Necktie attr ==
+layer {
+  name: "wearing_necktie_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "wearing_necktie_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "wearing_necktie_relu"
+  type: "ReLU"
+  bottom: "wearing_necktie_attr"
+  top: "wearing_necktie_attr"
+}
+
+layer {
+  name: "wearing_necktie_dropout"
+  type: "Dropout"
+  bottom: "wearing_necktie_attr"
+  top: "wearing_necktie_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_necktie_score"
+  type: "InnerProduct"
+  bottom: "wearing_necktie_attr"
+  top: "wearing_necktie_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_necktie_prob"
+  type: "Softmax"
+  bottom: "wearing_necktie_score"
+  top: "wearing_necktie_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Bald attr ==
+layer {
+  name: "bald_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "bald_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "bald_relu"
+  type: "ReLU"
+  bottom: "bald_attr"
+  top: "bald_attr"
+}
+
+layer {
+  name: "bald_dropout"
+  type: "Dropout"
+  bottom: "bald_attr"
+  top: "bald_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "bald_score"
+  type: "InnerProduct"
+  bottom: "bald_attr"
+  top: "bald_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "bald_prob"
+  type: "Softmax"
+  bottom: "bald_score"
+  top: "bald_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Receding_Hairline attr ==
+layer {
+  name: "receding_hairline_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "receding_hairline_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "receding_hairline_relu"
+  type: "ReLU"
+  bottom: "receding_hairline_attr"
+  top: "receding_hairline_attr"
+}
+
+layer {
+  name: "receding_hairline_dropout"
+  type: "Dropout"
+  bottom: "receding_hairline_attr"
+  top: "receding_hairline_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "receding_hairline_score"
+  type: "InnerProduct"
+  bottom: "receding_hairline_attr"
+  top: "receding_hairline_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "receding_hairline_prob"
+  type: "Softmax"
+  bottom: "receding_hairline_score"
+  top: "receding_hairline_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Bangs attr ==
+layer {
+  name: "bangs_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "bangs_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "bangs_relu"
+  type: "ReLU"
+  bottom: "bangs_attr"
+  top: "bangs_attr"
+}
+
+layer {
+  name: "bangs_dropout"
+  type: "Dropout"
+  bottom: "bangs_attr"
+  top: "bangs_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "bangs_score"
+  type: "InnerProduct"
+  bottom: "bangs_attr"
+  top: "bangs_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "bangs_prob"
+  type: "Softmax"
+  bottom: "bangs_score"
+  top: "bangs_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wearing_Hat attr ==
+layer {
+  name: "wearing_hat_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "wearing_hat_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "wearing_hat_relu"
+  type: "ReLU"
+  bottom: "wearing_hat_attr"
+  top: "wearing_hat_attr"
+}
+
+layer {
+  name: "wearing_hat_dropout"
+  type: "Dropout"
+  bottom: "wearing_hat_attr"
+  top: "wearing_hat_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_hat_score"
+  type: "InnerProduct"
+  bottom: "wearing_hat_attr"
+  top: "wearing_hat_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_hat_prob"
+  type: "Softmax"
+  bottom: "wearing_hat_score"
+  top: "wearing_hat_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Straight_Hair attr ==
+layer {
+  name: "straight_hair_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "straight_hair_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "straight_hair_relu"
+  type: "ReLU"
+  bottom: "straight_hair_attr"
+  top: "straight_hair_attr"
+}
+
+layer {
+  name: "straight_hair_dropout"
+  type: "Dropout"
+  bottom: "straight_hair_attr"
+  top: "straight_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "straight_hair_score"
+  type: "InnerProduct"
+  bottom: "straight_hair_attr"
+  top: "straight_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "straight_hair_prob"
+  type: "Softmax"
+  bottom: "straight_hair_score"
+  top: "straight_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wavy_Hair attr ==
+layer {
+  name: "wavy_hair_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "wavy_hair_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "wavy_hair_relu"
+  type: "ReLU"
+  bottom: "wavy_hair_attr"
+  top: "wavy_hair_attr"
+}
+
+layer {
+  name: "wavy_hair_dropout"
+  type: "Dropout"
+  bottom: "wavy_hair_attr"
+  top: "wavy_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wavy_hair_score"
+  type: "InnerProduct"
+  bottom: "wavy_hair_attr"
+  top: "wavy_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wavy_hair_prob"
+  type: "Softmax"
+  bottom: "wavy_hair_score"
+  top: "wavy_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+#== group 7, loss of 5_o_Clock_Shadow attr ==
+layer {
+  name: "5_o_clock_shadow_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "5_o_clock_shadow_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "5_o_clock_shadow_relu"
+  type: "ReLU"
+  bottom: "5_o_clock_shadow_attr"
+  top: "5_o_clock_shadow_attr"
+}
+
+layer {
+  name: "5_o_clock_shadow_dropout"
+  type: "Dropout"
+  bottom: "5_o_clock_shadow_attr"
+  top: "5_o_clock_shadow_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "5_o_clock_shadow_score"
+  type: "InnerProduct"
+  bottom: "5_o_clock_shadow_attr"
+  top: "5_o_clock_shadow_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "5_o_clock_shadow_prob"
+  type: "Softmax"
+  bottom: "5_o_clock_shadow_score"
+  top: "5_o_clock_shadow_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 7, loss of Mustache attr ==
+layer {
+  name: "mustache_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "mustache_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "mustache_relu"
+  type: "ReLU"
+  bottom: "mustache_attr"
+  top: "mustache_attr"
+}
+
+layer {
+  name: "mustache_dropout"
+  type: "Dropout"
+  bottom: "mustache_attr"
+  top: "mustache_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "mustache_score"
+  type: "InnerProduct"
+  bottom: "mustache_attr"
+  top: "mustache_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "mustache_prob"
+  type: "Softmax"
+  bottom: "mustache_score"
+  top: "mustache_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 7, loss of No_Beard attr ==
+layer {
+  name: "no_beard_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "no_beard_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "no_beard_relu"
+  type: "ReLU"
+  bottom: "no_beard_attr"
+  top: "no_beard_attr"
+}
+
+layer {
+  name: "no_beard_dropout"
+  type: "Dropout"
+  bottom: "no_beard_attr"
+  top: "no_beard_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "no_beard_score"
+  type: "InnerProduct"
+  bottom: "no_beard_attr"
+  top: "no_beard_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "no_beard_prob"
+  type: "Softmax"
+  bottom: "no_beard_score"
+  top: "no_beard_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 7, loss of Sideburns attr ==
+layer {
+  name: "sideburns_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "sideburns_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "sideburns_relu"
+  type: "ReLU"
+  bottom: "sideburns_attr"
+  top: "sideburns_attr"
+}
+
+layer {
+  name: "sideburns_dropout"
+  type: "Dropout"
+  bottom: "sideburns_attr"
+  top: "sideburns_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "sideburns_score"
+  type: "InnerProduct"
+  bottom: "sideburns_attr"
+  top: "sideburns_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "sideburns_prob"
+  type: "Softmax"
+  bottom: "sideburns_score"
+  top: "sideburns_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 7, loss of Goatee attr ==
+layer {
+  name: "goatee_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "goatee_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "goatee_relu"
+  type: "ReLU"
+  bottom: "goatee_attr"
+  top: "goatee_attr"
+}
+
+layer {
+  name: "goatee_dropout"
+  type: "Dropout"
+  bottom: "goatee_attr"
+  top: "goatee_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "goatee_score"
+  type: "InnerProduct"
+  bottom: "goatee_attr"
+  top: "goatee_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "goatee_prob"
+  type: "Softmax"
+  bottom: "goatee_score"
+  top: "goatee_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 8, loss of High_Cheekbones attr ==
+layer {
+  name: "high_cheekbones_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "high_cheekbones_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "high_cheekbones_relu"
+  type: "ReLU"
+  bottom: "high_cheekbones_attr"
+  top: "high_cheekbones_attr"
+}
+
+layer {
+  name: "high_cheekbones_dropout"
+  type: "Dropout"
+  bottom: "high_cheekbones_attr"
+  top: "high_cheekbones_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "high_cheekbones_score"
+  type: "InnerProduct"
+  bottom: "high_cheekbones_attr"
+  top: "high_cheekbones_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "high_cheekbones_prob"
+  type: "Softmax"
+  bottom: "high_cheekbones_score"
+  top: "high_cheekbones_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 8, loss of Rosy_Cheeks attr ==
+layer {
+  name: "rosy_cheeks_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "rosy_cheeks_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "rosy_cheeks_relu"
+  type: "ReLU"
+  bottom: "rosy_cheeks_attr"
+  top: "rosy_cheeks_attr"
+}
+
+layer {
+  name: "rosy_cheeks_dropout"
+  type: "Dropout"
+  bottom: "rosy_cheeks_attr"
+  top: "rosy_cheeks_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "rosy_cheeks_score"
+  type: "InnerProduct"
+  bottom: "rosy_cheeks_attr"
+  top: "rosy_cheeks_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "rosy_cheeks_prob"
+  type: "Softmax"
+  bottom: "rosy_cheeks_score"
+  top: "rosy_cheeks_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 9, loss of Chubby attr ==
+layer {
+  name: "chubby_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "chubby_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "chubby_relu"
+  type: "ReLU"
+  bottom: "chubby_attr"
+  top: "chubby_attr"
+}
+
+layer {
+  name: "chubby_dropout"
+  type: "Dropout"
+  bottom: "chubby_attr"
+  top: "chubby_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "chubby_score"
+  type: "InnerProduct"
+  bottom: "chubby_attr"
+  top: "chubby_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "chubby_prob"
+  type: "Softmax"
+  bottom: "chubby_score"
+  top: "chubby_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 9, loss of Double_Chin attr ==
+layer {
+  name: "double_chin_attr"
+  type: "InnerProduct"
+  bottom: "part_shared_conv2"
+  top: "double_chin_attr"
+  inner_product_param {
+    num_output: 512
+  }
+}
+
+layer {
+  name: "double_chin_relu"
+  type: "ReLU"
+  bottom: "double_chin_attr"
+  top: "double_chin_attr"
+}
+
+layer {
+  name: "double_chin_dropout"
+  type: "Dropout"
+  bottom: "double_chin_attr"
+  top: "double_chin_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "double_chin_score"
+  type: "InnerProduct"
+  bottom: "double_chin_attr"
+  top: "double_chin_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "double_chin_prob"
+  type: "Softmax"
+  bottom: "double_chin_score"
+  top: "double_chin_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}

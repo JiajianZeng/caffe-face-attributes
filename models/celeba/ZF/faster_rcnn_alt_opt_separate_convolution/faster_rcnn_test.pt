@@ -1,0 +1,3246 @@
+name: "ZF"
+
+input: "data"
+input_shape {
+  dim: 1
+  dim: 3
+  dim: 224
+  dim: 224
+}
+
+input: "im_info"
+input_shape {
+  dim: 1
+  dim: 3
+}
+
+#========= conv1-conv5 ============
+
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 96
+    kernel_size: 7
+    pad: 3
+    stride: 2
+  }
+}
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "conv1"
+  top: "conv1"
+}
+layer {
+  name: "norm1"
+  type: "LRN"
+  bottom: "conv1"
+  top: "norm1"
+  lrn_param {
+    local_size: 3
+    alpha: 0.00005
+    beta: 0.75
+    norm_region: WITHIN_CHANNEL
+    engine: CAFFE
+  }
+}
+layer {
+  name: "pool1"
+  type: "Pooling"
+  bottom: "norm1"
+  top: "pool1"
+  pooling_param {
+    kernel_size: 3
+    stride: 2
+    pad: 1
+    pool: MAX
+  }
+}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    pad: 2
+    stride: 2
+  }
+}
+layer {
+  name: "relu2"
+  type: "ReLU"
+  bottom: "conv2"
+  top: "conv2"
+}
+layer {
+  name: "norm2"
+  type: "LRN"
+  bottom: "conv2"
+  top: "norm2"
+  lrn_param {
+    local_size: 3
+    alpha: 0.00005
+    beta: 0.75
+    norm_region: WITHIN_CHANNEL
+    engine: CAFFE
+  }
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "norm2"
+  top: "pool2"
+  pooling_param {
+    kernel_size: 3
+    stride: 2
+    pad: 1
+    pool: MAX
+  }
+}
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "conv3"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 384
+    kernel_size: 3
+    pad: 1
+    stride: 1
+  }
+}
+layer {
+  name: "relu3"
+  type: "ReLU"
+  bottom: "conv3"
+  top: "conv3"
+}
+layer {
+  name: "conv4"
+  type: "Convolution"
+  bottom: "conv3"
+  top: "conv4"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 384
+    kernel_size: 3
+    pad: 1
+    stride: 1
+  }
+}
+layer {
+  name: "relu4"
+  type: "ReLU"
+  bottom: "conv4"
+  top: "conv4"
+}
+layer {
+  name: "conv5"
+  type: "Convolution"
+  bottom: "conv4"
+  top: "conv5"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 256
+    kernel_size: 3
+    pad: 1
+    stride: 1
+  }
+}
+layer {
+  name: "relu5"
+  type: "ReLU"
+  bottom: "conv5"
+  top: "conv5"
+}
+
+
+#========= RPN ============
+
+layer {
+  name: "rpn_conv1"
+  type: "Convolution"
+  bottom: "conv5"
+  top: "rpn_conv1"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+layer {
+  name: "rpn_relu1"
+  type: "ReLU"
+  bottom: "rpn_conv1"
+  top: "rpn_conv1"
+}
+layer {
+  name: "rpn_cls_score"
+  type: "Convolution"
+  bottom: "rpn_conv1"
+  top: "rpn_cls_score"
+  convolution_param {
+    num_output: 18   # 2(bg/fg) * 9(anchors)
+    kernel_size: 1 pad: 0 stride: 1
+  }
+}
+layer {
+  name: "rpn_bbox_pred"
+  type: "Convolution"
+  bottom: "rpn_conv1"
+  top: "rpn_bbox_pred"
+  convolution_param {
+    num_output: 36   # 4 * 9(anchors)
+    kernel_size: 1 pad: 0 stride: 1
+  }
+}
+layer {
+   bottom: "rpn_cls_score"
+   top: "rpn_cls_score_reshape"
+   name: "rpn_cls_score_reshape"
+   type: "Reshape"
+   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+}
+
+#========= RoI Proposal ============
+
+layer {
+  name: "rpn_cls_prob"
+  type: "Softmax"
+  bottom: "rpn_cls_score_reshape"
+  top: "rpn_cls_prob"
+}
+layer {
+  name: 'rpn_cls_prob_reshape'
+  type: 'Reshape'
+  bottom: 'rpn_cls_prob'
+  top: 'rpn_cls_prob_reshape'
+  reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
+}
+layer {
+  name: 'proposal'
+  type: 'Python'
+  bottom: 'rpn_cls_prob_reshape'
+  bottom: 'rpn_bbox_pred'
+  bottom: 'im_info'
+  top: 'rois'
+  python_param {
+    module: 'rpn.proposal_layer'
+    layer: 'ProposalLayer'
+    param_str: "'feat_stride': 16"
+  }
+}
+
+#========= RCNN for roi class prediction ============
+
+layer {
+  name: "roi_pool_conv5_class_prediction"
+  type: "ROIPooling"
+  bottom: "conv5"
+  bottom: "rois"
+  top: "roi_pool_conv5_class_prediction"
+  roi_pooling_param {
+    pooled_w: 6
+    pooled_h: 6
+    spatial_scale: 0.0625 # 1/16
+  }
+}
+
+#========= prob of proposal cls =========
+layer {
+  name: "fc6"
+  type: "InnerProduct"
+  bottom: "roi_pool_conv5_class_prediction"
+  top: "fc6"
+  inner_product_param {
+    num_output: 4096
+  }
+}
+
+layer {
+  name: "relu6"
+  type: "ReLU"
+  bottom: "fc6"
+  top: "fc6"
+}
+
+layer {
+  name: "drop6"
+  type: "Dropout"
+  bottom: "fc6"
+  top: "fc6"
+  dropout_param {
+    dropout_ratio: 0.5
+    scale_train: false
+  }
+}
+
+layer {
+  name: "fc7"
+  type: "InnerProduct"
+  bottom: "fc6"
+  top: "fc7"
+  inner_product_param {
+    num_output: 4096
+  }
+}
+
+layer {
+  name: "relu7"
+  type: "ReLU"
+  bottom: "fc7"
+  top: "fc7"
+}
+
+layer {
+  name: "drop7"
+  type: "Dropout"
+  bottom: "fc7"
+  top: "fc7"
+  dropout_param {
+    dropout_ratio: 0.5
+    scale_train: false
+  }
+}
+
+layer {
+  name: "cls_score"
+  type: "InnerProduct"
+  bottom: "fc7"
+  top: "cls_score"
+  inner_product_param {
+    num_output: 7
+  }
+}
+
+layer {
+  name: "cls_prob"
+  type: "Softmax"
+  bottom: "cls_score"
+  top: "cls_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#========= Select RoIs for fixed classed ============
+
+layer {
+  name: 'select_rois'
+  type: 'Python'
+  bottom: 'rois'
+  bottom: 'cls_prob'
+  top: 'select_rois'
+  python_param {
+    module: 'rpn.roi_select_layer'
+    layer: 'RoISelectLayer'
+    param_str: "'num_class': 7"
+  }
+}
+
+#========= RCNN for face attributes prediction ============
+
+layer {
+  name: "roi_pool_conv5"
+  type: "ROIPooling"
+  bottom: "conv5"
+  bottom: "select_rois"
+  top: "roi_pool_conv5"
+  roi_pooling_param {
+    pooled_w: 6
+    pooled_h: 6
+    spatial_scale: 0.0625 # 1/16
+  }
+}
+
+#========= we perform a depth concat and part shared convolution =========
+layer {
+  name: "roi_pool_conv5_reshape"
+  bottom: "roi_pool_conv5"
+  top: "roi_pool_conv5_reshape"
+  type: "Reshape"
+  reshape_param {
+    shape { dim: 1 dim: -1 dim: 0 dim: 0 }
+  }
+}
+
+#layer {
+#  name: "part_shared_conv1"
+#  bottom: "roi_pool_conv5_reshape"
+#  top: "part_shared_conv1"
+#  type: "Convolution"
+#  convolution_param {
+#    num_output: 128
+#    kernel_size: 3 pad: 1 stride: 1
+#  }
+#}
+
+#layer{
+#  name: "part_shared_relu1"
+#  bottom: "part_shared_conv1"
+#  top: "part_shared_conv1"
+#  type: "ReLU"
+#}
+
+#layer {
+#  name: "part_shared_conv2"
+#  bottom: "part_shared_conv1"
+#  top: "part_shared_conv2"
+#  type: "Convolution"
+#  convolution_param {
+#    num_output: 256
+#    kernel_size: 3 pad: 1 stride: 1
+#  }
+#}
+
+#layer{
+#  name: "part_shared_relu2"
+#  bottom: "part_shared_conv2"
+#  top: "part_shared_conv2"
+#  type: "ReLU"
+#}
+
+#========= attribute group 1 - group 9 =========
+#== group 1, loss of Male attr ==
+layer {
+  name: "male_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "male_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "male_conv_relu"
+  bottom: "male_conv"
+  top: "male_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "male_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "male_conv"
+  top: "male_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "male_relu"
+  type: "ReLU"
+  bottom: "male_attr"
+  top: "male_attr"
+}
+
+layer {
+  name: "male_dropout"
+  type: "Dropout"
+  bottom: "male_attr"
+  top: "male_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "male_score"
+  type: "InnerProduct"
+  bottom: "male_attr"
+  top: "male_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "male_prob"
+  type: "Softmax"
+  bottom: "male_score"
+  top: "male_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 2, loss of Big_Nose attr ==
+layer {
+  name: "big_nose_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "big_nose_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "big_nose_conv_relu"
+  bottom: "big_nose_conv"
+  top: "big_nose_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "big_nose_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "big_nose_conv"
+  top: "big_nose_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "big_nose_relu"
+  type: "ReLU"
+  bottom: "big_nose_attr"
+  top: "big_nose_attr"
+}
+
+layer {
+  name: "big_nose_dropout"
+  type: "Dropout"
+  bottom: "big_nose_attr"
+  top: "big_nose_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "big_nose_score"
+  type: "InnerProduct"
+  bottom: "big_nose_attr"
+  top: "big_nose_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "big_nose_prob"
+  type: "Softmax"
+  bottom: "big_nose_score"
+  top: "big_nose_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 2, loss of Pointly_Nose attr ==
+layer {
+  name: "pointly_nose_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "pointly_nose_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "pointly_nose_conv_relu"
+  bottom: "pointly_nose_conv"
+  top: "pointly_nose_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "pointly_nose_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "pointly_nose_conv"
+  top: "pointly_nose_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "pointly_nose_relu"
+  type: "ReLU"
+  bottom: "pointly_nose_attr"
+  top: "pointly_nose_attr"
+}
+
+layer {
+  name: "pointly_nose_dropout"
+  type: "Dropout"
+  bottom: "pointly_nose_attr"
+  top: "pointly_nose_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "pointly_nose_score"
+  type: "InnerProduct"
+  bottom: "pointly_nose_attr"
+  top: "pointly_nose_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "pointly_nose_prob"
+  type: "Softmax"
+  bottom: "pointly_nose_score"
+  top: "pointly_nose_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 3, loss of Big_Lips attr ==
+layer {
+  name: "big_lips_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "big_lips_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "big_lips_conv_relu"
+  bottom: "big_lips_conv"
+  top: "big_lips_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "big_lips_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "big_lips_conv"
+  top: "big_lips_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "big_lips_relu"
+  type: "ReLU"
+  bottom: "big_lips_attr"
+  top: "big_lips_attr"
+}
+
+layer {
+  name: "big_lips_dropout"
+  type: "Dropout"
+  bottom: "big_lips_attr"
+  top: "big_lips_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "big_lips_score"
+  type: "InnerProduct"
+  bottom: "big_lips_attr"
+  top: "big_lips_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "big_lips_prob"
+  type: "Softmax"
+  bottom: "big_lips_score"
+  top: "big_lips_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 3, loss of Smiling attr ==
+layer {
+  name: "smiling_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "smiling_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "smiling_conv_relu"
+  bottom: "smiling_conv"
+  top: "smiling_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "smiling_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "smiling_conv"
+  top: "smiling_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "smiling_relu"
+  type: "ReLU"
+  bottom: "smiling_attr"
+  top: "smiling_attr"
+}
+
+layer {
+  name: "smiling_dropout"
+  type: "Dropout"
+  bottom: "smiling_attr"
+  top: "smiling_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "smiling_score"
+  type: "InnerProduct"
+  bottom: "smiling_attr"
+  top: "smiling_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "smiling_prob"
+  type: "Softmax"
+  bottom: "smiling_score"
+  top: "smiling_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 3, loss of Wearing_Lipstick attr ==
+layer {
+  name: "wearing_lipstick_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "wearing_lipstick_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "wearing_lipstick_conv_relu"
+  bottom: "wearing_lipstick_conv"
+  top: "wearing_lipstick_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "wearing_lipstick_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "wearing_lipstick_conv"
+  top: "wearing_lipstick_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "wearing_lipstick_relu"
+  type: "ReLU"
+  bottom: "wearing_lipstick_attr"
+  top: "wearing_lipstick_attr"
+}
+
+layer {
+  name: "wearing_lipstick_dropout"
+  type: "Dropout"
+  bottom: "wearing_lipstick_attr"
+  top: "wearing_lipstick_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_lipstick_score"
+  type: "InnerProduct"
+  bottom: "wearing_lipstick_attr"
+  top: "wearing_lipstick_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_lipstick_prob"
+  type: "Softmax"
+  bottom: "wearing_lipstick_score"
+  top: "wearing_lipstick_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 3, loss of Mouth_Slightly_Open attr ==
+layer {
+  name: "mouth_slightly_open_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "mouth_slightly_open_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "mouth_slightly_open_conv_relu"
+  bottom: "mouth_slightly_open_conv"
+  top: "mouth_slightly_open_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "mouth_slightly_open_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "mouth_slightly_open_conv"
+  top: "mouth_slightly_open_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "mouth_slightly_open_relu"
+  type: "ReLU"
+  bottom: "mouth_slightly_open_attr"
+  top: "mouth_slightly_open_attr"
+}
+
+layer {
+  name: "mouth_slightly_open_dropout"
+  type: "Dropout"
+  bottom: "mouth_slightly_open_attr"
+  top: "mouth_slightly_open_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "mouth_slightly_open_score"
+  type: "InnerProduct"
+  bottom: "mouth_slightly_open_attr"
+  top: "mouth_slightly_open_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "mouth_slightly_open_prob"
+  type: "Softmax"
+  bottom: "mouth_slightly_open_score"
+  top: "mouth_slightly_open_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Arched_Eyebrows attr ==
+layer {
+  name: "arch_eyebrows_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "arch_eyebrows_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "arch_eyebrows_conv_relu"
+  bottom: "arch_eyebrows_conv"
+  top: "arch_eyebrows_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "arched_eyebrows_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "arch_eyebrows_conv"
+  top: "arched_eyebrows_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "arched_eyebrows_relu"
+  type: "ReLU"
+  bottom: "arched_eyebrows_attr"
+  top: "arched_eyebrows_attr"
+}
+
+layer {
+  name: "arched_eyebrows_dropout"
+  type: "Dropout"
+  bottom: "arched_eyebrows_attr"
+  top: "arched_eyebrows_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "arched_eyebrows_score"
+  type: "InnerProduct"
+  bottom: "arched_eyebrows_attr"
+  top: "arched_eyebrows_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "arched_eyebrows_prob"
+  type: "Softmax"
+  bottom: "arched_eyebrows_score"
+  top: "arched_eyebrows_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Bags_Under_eyes attr ==
+layer {
+  name: "b_u_e_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "b_u_e_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "b_u_e_conv_relu"
+  bottom: "b_u_e_conv"
+  top: "b_u_e_conv"
+  type: "ReLU"
+}
+layer {
+  name: "bags_under_eyes_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "b_u_e_conv"
+  top: "bags_under_eyes_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "bags_under_eyes_relu"
+  type: "ReLU"
+  bottom: "bags_under_eyes_attr"
+  top: "bags_under_eyes_attr"
+}
+
+layer {
+  name: "bags_under_eyes_dropout"
+  type: "Dropout"
+  bottom: "bags_under_eyes_attr"
+  top: "bags_under_eyes_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "bags_under_eyes_score"
+  type: "InnerProduct"
+  bottom: "bags_under_eyes_attr"
+  top: "bags_under_eyes_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "bags_under_eyes_prob"
+  type: "Softmax"
+  bottom: "bags_under_eyes_score"
+  top: "bags_under_eyes_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Bushy_Eyebrows attr ==
+layer {
+  name: "bushy_eyebrows_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "bushy_eyebrows_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "bushy_eyebrows_conv_relu"
+  bottom: "bushy_eyebrows_conv"
+  top: "bushy_eyebrows_conv"
+  type: "ReLU"
+}
+layer {
+  name: "bushy_eyebrows_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "bushy_eyebrows_conv"
+  top: "bushy_eyebrows_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "bushy_eyebrows_relu"
+  type: "ReLU"
+  bottom: "bushy_eyebrows_attr"
+  top: "bushy_eyebrows_attr"
+}
+
+layer {
+  name: "bushy_eyebrows_dropout"
+  type: "Dropout"
+  bottom: "bushy_eyebrows_attr"
+  top: "bushy_eyebrows_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "bushy_eyebrows_score"
+  type: "InnerProduct"
+  bottom: "bushy_eyebrows_attr"
+  top: "bushy_eyebrows_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "bushy_eyebrows_prob"
+  type: "Softmax"
+  bottom: "bushy_eyebrows_score"
+  top: "bushy_eyebrows_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Narrow_Eyes attr ==
+layer {
+  name: "narrow_eyes_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "narrow_eyes_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "narrow_eyes_conv_relu"
+  bottom: "narrow_eyes_conv"
+  top: "narrow_eyes_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "narrow_eyes_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "narrow_eyes_conv"
+  top: "narrow_eyes_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "narrow_eyes_relu"
+  type: "ReLU"
+  bottom: "narrow_eyes_attr"
+  top: "narrow_eyes_attr"
+}
+
+layer {
+  name: "narrow_eyes_dropout"
+  type: "Dropout"
+  bottom: "narrow_eyes_attr"
+  top: "narrow_eyes_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "narrow_eyes_score"
+  type: "InnerProduct"
+  bottom: "narrow_eyes_attr"
+  top: "narrow_eyes_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "narrow_eyes_prob"
+  type: "Softmax"
+  bottom: "narrow_eyes_score"
+  top: "narrow_eyes_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 4, loss of Eyeglasses attr ==
+layer {
+  name: "eyeglasses_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "eyeglasses_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "eyeglasses_conv_relu"
+  bottom: "eyeglasses_conv"
+  top: "eyeglasses_conv"
+  type: "ReLU"
+}
+layer {
+  name: "eyeglasses_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "eyeglasses_conv"
+  top: "eyeglasses_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "eyeglasses_relu"
+  type: "ReLU"
+  bottom: "eyeglasses_attr"
+  top: "eyeglasses_attr"
+}
+
+layer {
+  name: "eyeglasses_dropout"
+  type: "Dropout"
+  bottom: "eyeglasses_attr"
+  top: "eyeglasses_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "eyeglasses_score"
+  type: "InnerProduct"
+  bottom: "eyeglasses_attr"
+  top: "eyeglasses_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "eyeglasses_prob"
+  type: "Softmax"
+  bottom: "eyeglasses_score"
+  top: "eyeglasses_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Attractive attr ==
+layer {
+  name: "attractive_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "attractive_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "attractive_conv_relu"
+  bottom: "attractive_conv"
+  top: "attractive_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "attractive_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "attractive_conv"
+  top: "attractive_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "attractive_relu"
+  type: "ReLU"
+  bottom: "attractive_attr"
+  top: "attractive_attr"
+}
+
+layer {
+  name: "attractive_dropout"
+  type: "Dropout"
+  bottom: "attractive_attr"
+  top: "attractive_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "attractive_score"
+  type: "InnerProduct"
+  bottom: "attractive_attr"
+  top: "attractive_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "attractive_prob"
+  type: "Softmax"
+  bottom: "attractive_score"
+  top: "attractive_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Blurry attr ==
+layer {
+  name: "blurry_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "blurry_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "blurry_conv_relu"
+  bottom: "blurry_conv"
+  top: "blurry_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "blurry_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "blurry_conv"
+  top: "blurry_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "blurry_relu"
+  type: "ReLU"
+  bottom: "blurry_attr"
+  top: "blurry_attr"
+}
+
+layer {
+  name: "blurry_dropout"
+  type: "Dropout"
+  bottom: "blurry_attr"
+  top: "blurry_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "blurry_score"
+  type: "InnerProduct"
+  bottom: "blurry_attr"
+  top: "blurry_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "blurry_prob"
+  type: "Softmax"
+  bottom: "blurry_score"
+  top: "blurry_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Oval_Face attr ==
+layer {
+  name: "oval_face_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "oval_face_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "oval_face_conv_relu"
+  bottom: "oval_face_conv"
+  top: "oval_face_conv"
+  type: "ReLU"
+}
+layer {
+  name: "oval_face_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "oval_face_conv"
+  top: "oval_face_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "oval_face_relu"
+  type: "ReLU"
+  bottom: "oval_face_attr"
+  top: "oval_face_attr"
+}
+
+layer {
+  name: "oval_face_dropout"
+  type: "Dropout"
+  bottom: "oval_face_attr"
+  top: "oval_face_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "oval_face_score"
+  type: "InnerProduct"
+  bottom: "oval_face_attr"
+  top: "oval_face_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "oval_face_prob"
+  type: "Softmax"
+  bottom: "oval_face_score"
+  top: "oval_face_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Pale_Skin attr ==
+layer {
+  name: "pale_skin_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "pale_skin_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "pale_skin_conv_relu"
+  bottom: "pale_skin_conv"
+  top: "pale_skin_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "pale_skin_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "pale_skin_conv"
+  top: "pale_skin_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "pale_skin_relu"
+  type: "ReLU"
+  bottom: "pale_skin_attr"
+  top: "pale_skin_attr"
+}
+
+layer {
+  name: "pale_skin_dropout"
+  type: "Dropout"
+  bottom: "pale_skin_attr"
+  top: "pale_skin_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "pale_skin_score"
+  type: "InnerProduct"
+  bottom: "pale_skin_attr"
+  top: "pale_skin_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "pale_skin_prob"
+  type: "Softmax"
+  bottom: "pale_skin_score"
+  top: "pale_skin_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Young attr ==
+layer {
+  name: "young_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "young_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "young_conv_relu"
+  bottom: "young_conv"
+  top: "young_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "young_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "young_conv"
+  top: "young_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "young_relu"
+  type: "ReLU"
+  bottom: "young_attr"
+  top: "young_attr"
+}
+
+layer {
+  name: "young_dropout"
+  type: "Dropout"
+  bottom: "young_attr"
+  top: "young_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "young_score"
+  type: "InnerProduct"
+  bottom: "young_attr"
+  top: "young_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "young_prob"
+  type: "Softmax"
+  bottom: "young_score"
+  top: "young_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 5, loss of Heavy_Makeup attr ==
+layer {
+  name: "h_m_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "h_m_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "h_m_conv_relu"
+  bottom: "h_m_conv"
+  top: "h_m_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "heavy_makeup_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "h_m_conv"
+  top: "heavy_makeup_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "heavy_makeup_relu"
+  type: "ReLU"
+  bottom: "heavy_makeup_attr"
+  top: "heavy_makeup_attr"
+}
+
+layer {
+  name: "heavy_makeup_dropout"
+  type: "Dropout"
+  bottom: "heavy_makeup_attr"
+  top: "heavy_makeup_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "heavy_makeup_score"
+  type: "InnerProduct"
+  bottom: "heavy_makeup_attr"
+  top: "heavy_makeup_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "heavy_makeup_prob"
+  type: "Softmax"
+  bottom: "heavy_makeup_score"
+  top: "heavy_makeup_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Black_Hair attr ==
+layer {
+  name: "black_hair_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "black_hair_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "black_hair_conv_relu"
+  bottom: "black_hair_conv"
+  top: "black_hair_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "black_hair_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "black_hair_conv"
+  top: "black_hair_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "black_hair_relu"
+  type: "ReLU"
+  bottom: "black_hair_attr"
+  top: "black_hair_attr"
+}
+
+layer {
+  name: "black_hair_dropout"
+  type: "Dropout"
+  bottom: "black_hair_attr"
+  top: "black_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "black_hair_score"
+  type: "InnerProduct"
+  bottom: "black_hair_attr"
+  top: "black_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "black_hair_prob"
+  type: "Softmax"
+  bottom: "black_hair_score"
+  top: "black_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+#== group 6, loss of Blond_Hair attr ==
+layer {
+  name: "blond_hair_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "blond_hair_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "blond_hair_conv_relu"
+  bottom: "blond_hair_conv"
+  top: "blond_hair_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "blond_hair_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "blond_hair_conv"
+  top: "blond_hair_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+layer {
+  name: "blond_hair_relu"
+  type: "ReLU"
+  bottom: "blond_hair_attr"
+  top: "blond_hair_attr"
+}
+
+layer {
+  name: "blond_hair_dropout"
+  type: "Dropout"
+  bottom: "blond_hair_attr"
+  top: "blond_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "blond_hair_score"
+  type: "InnerProduct"
+  bottom: "blond_hair_attr"
+  top: "blond_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "blond_hair_prob"
+  type: "Softmax"
+  bottom: "blond_hair_score"
+  top: "blond_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Brown_Hair attr ==
+layer {
+  name: "brown_hair_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "brown_hair_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "brown_hair_conv_relu"
+  bottom: "brown_hair_conv"
+  top: "brown_hair_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "brown_hair_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "brown_hair_conv"
+  top: "brown_hair_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "brown_hair_relu"
+  type: "ReLU"
+  bottom: "brown_hair_attr"
+  top: "brown_hair_attr"
+}
+
+layer {
+  name: "brown_hair_dropout"
+  type: "Dropout"
+  bottom: "brown_hair_attr"
+  top: "brown_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "brown_hair_score"
+  type: "InnerProduct"
+  bottom: "brown_hair_attr"
+  top: "brown_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "brown_hair_prob"
+  type: "Softmax"
+  bottom: "brown_hair_score"
+  top: "brown_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+#== group 6, loss of Gray_Hair attr ==
+layer {
+  name: "gray_hair_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "gray_hair_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "gray_hair_conv_relu"
+  bottom: "gray_hair_conv"
+  top: "gray_hair_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "gray_hair_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "gray_hair_conv"
+  top: "gray_hair_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "gray_hair_relu"
+  type: "ReLU"
+  bottom: "gray_hair_attr"
+  top: "gray_hair_attr"
+}
+
+layer {
+  name: "gray_hair_dropout"
+  type: "Dropout"
+  bottom: "gray_hair_attr"
+  top: "gray_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "gray_hair_score"
+  type: "InnerProduct"
+  bottom: "gray_hair_attr"
+  top: "gray_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "gray_hair_prob"
+  type: "Softmax"
+  bottom: "gray_hair_score"
+  top: "gray_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wearing_Earrings attr ==
+layer {
+  name: "wearing_earrings_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "wearing_earrings_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "wearing_earrings_conv_relu"
+  bottom: "wearing_earrings_conv"
+  top: "wearing_earrings_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "wearing_earrings_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "wearing_earrings_conv"
+  top: "wearing_earrings_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "wearing_earrings_relu"
+  type: "ReLU"
+  bottom: "wearing_earrings_attr"
+  top: "wearing_earrings_attr"
+}
+
+layer {
+  name: "wearing_earrings_dropout"
+  type: "Dropout"
+  bottom: "wearing_earrings_attr"
+  top: "wearing_earrings_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_earrings_score"
+  type: "InnerProduct"
+  bottom: "wearing_earrings_attr"
+  top: "wearing_earrings_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_earrings_prob"
+  type: "Softmax"
+  bottom: "wearing_earrings_score"
+  top: "wearing_earrings_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wearing_Necklace attr ==
+layer {
+  name: "wearing_necklace_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "wearing_necklace_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "wearing_necklace_conv_relu"
+  bottom: "wearing_necklace_conv"
+  top: "wearing_necklace_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "wearing_necklace_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "wearing_necklace_conv"
+  top: "wearing_necklace_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+
+layer {
+  name: "wearing_necklace_relu"
+  type: "ReLU"
+  bottom: "wearing_necklace_attr"
+  top: "wearing_necklace_attr"
+}
+
+layer {
+  name: "wearing_necklace_dropout"
+  type: "Dropout"
+  bottom: "wearing_necklace_attr"
+  top: "wearing_necklace_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_necklace_score"
+  type: "InnerProduct"
+  bottom: "wearing_necklace_attr"
+  top: "wearing_necklace_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_necklace_prob"
+  type: "Softmax"
+  bottom: "wearing_necklace_score"
+  top: "wearing_necklace_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wearing_Necktie attr ==
+layer {
+  name: "wearing_necktie_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "wearing_necktie_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "wearing_necktie_conv_relu"
+  bottom: "wearing_necktie_conv"
+  top: "wearing_necktie_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "wearing_necktie_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "wearing_necktie_conv"
+  top: "wearing_necktie_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "wearing_necktie_relu"
+  type: "ReLU"
+  bottom: "wearing_necktie_attr"
+  top: "wearing_necktie_attr"
+}
+
+layer {
+  name: "wearing_necktie_dropout"
+  type: "Dropout"
+  bottom: "wearing_necktie_attr"
+  top: "wearing_necktie_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_necktie_score"
+  type: "InnerProduct"
+  bottom: "wearing_necktie_attr"
+  top: "wearing_necktie_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_necktie_prob"
+  type: "Softmax"
+  bottom: "wearing_necktie_score"
+  top: "wearing_necktie_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Bald attr ==
+layer {
+  name: "bald_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "bald_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "bald_conv_relu"
+  bottom: "bald_conv"
+  top: "bald_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "bald_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "bald_conv"
+  top: "bald_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "bald_relu"
+  type: "ReLU"
+  bottom: "bald_attr"
+  top: "bald_attr"
+}
+
+layer {
+  name: "bald_dropout"
+  type: "Dropout"
+  bottom: "bald_attr"
+  top: "bald_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "bald_score"
+  type: "InnerProduct"
+  bottom: "bald_attr"
+  top: "bald_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "bald_prob"
+  type: "Softmax"
+  bottom: "bald_score"
+  top: "bald_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Receding_Hairline attr ==
+layer {
+  name: "receding_h_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "receding_h_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "receding_h_conv_relu"
+  bottom: "receding_h_conv"
+  top: "receding_h_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "receding_hairline_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "receding_h_conv"
+  top: "receding_hairline_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+layer {
+  name: "receding_hairline_relu"
+  type: "ReLU"
+  bottom: "receding_hairline_attr"
+  top: "receding_hairline_attr"
+}
+
+layer {
+  name: "receding_hairline_dropout"
+  type: "Dropout"
+  bottom: "receding_hairline_attr"
+  top: "receding_hairline_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "receding_hairline_score"
+  type: "InnerProduct"
+  bottom: "receding_hairline_attr"
+  top: "receding_hairline_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "receding_hairline_prob"
+  type: "Softmax"
+  bottom: "receding_hairline_score"
+  top: "receding_hairline_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Bangs attr ==
+layer {
+  name: "bangs_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "bangs_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "bangs_conv_relu"
+  bottom: "bangs_conv"
+  top: "bangs_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "bangs_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "bangs_conv"
+  top: "bangs_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "bangs_relu"
+  type: "ReLU"
+  bottom: "bangs_attr"
+  top: "bangs_attr"
+}
+
+layer {
+  name: "bangs_dropout"
+  type: "Dropout"
+  bottom: "bangs_attr"
+  top: "bangs_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "bangs_score"
+  type: "InnerProduct"
+  bottom: "bangs_attr"
+  top: "bangs_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "bangs_prob"
+  type: "Softmax"
+  bottom: "bangs_score"
+  top: "bangs_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wearing_Hat attr ==
+layer {
+  name: "wearing_h_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "wearing_h_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "wearing_h_conv_relu"
+  bottom: "wearing_h_conv"
+  top: "wearing_h_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "wearing_hat_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "wearing_h_conv"
+  top: "wearing_hat_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "wearing_hat_relu"
+  type: "ReLU"
+  bottom: "wearing_hat_attr"
+  top: "wearing_hat_attr"
+}
+
+layer {
+  name: "wearing_hat_dropout"
+  type: "Dropout"
+  bottom: "wearing_hat_attr"
+  top: "wearing_hat_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wearing_hat_score"
+  type: "InnerProduct"
+  bottom: "wearing_hat_attr"
+  top: "wearing_hat_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wearing_hat_prob"
+  type: "Softmax"
+  bottom: "wearing_hat_score"
+  top: "wearing_hat_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Straight_Hair attr ==
+layer {
+  name: "straight_h_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "straight_h_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "straight_h_conv_relu"
+  bottom: "straight_h_conv"
+  top: "straight_h_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "straight_hair_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "straight_h_conv"
+  top: "straight_hair_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "straight_hair_relu"
+  type: "ReLU"
+  bottom: "straight_hair_attr"
+  top: "straight_hair_attr"
+}
+
+layer {
+  name: "straight_hair_dropout"
+  type: "Dropout"
+  bottom: "straight_hair_attr"
+  top: "straight_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "straight_hair_score"
+  type: "InnerProduct"
+  bottom: "straight_hair_attr"
+  top: "straight_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "straight_hair_prob"
+  type: "Softmax"
+  bottom: "straight_hair_score"
+  top: "straight_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 6, loss of Wavy_Hair attr ==
+layer {
+  name: "wavy_h_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "wavy_h_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "wavy_h_conv_relu"
+  bottom: "wavy_h_conv"
+  top: "wavy_h_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "wavy_hair_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "wavy_h_conv"
+  top: "wavy_hair_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "wavy_hair_relu"
+  type: "ReLU"
+  bottom: "wavy_hair_attr"
+  top: "wavy_hair_attr"
+}
+
+layer {
+  name: "wavy_hair_dropout"
+  type: "Dropout"
+  bottom: "wavy_hair_attr"
+  top: "wavy_hair_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "wavy_hair_score"
+  type: "InnerProduct"
+  bottom: "wavy_hair_attr"
+  top: "wavy_hair_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "wavy_hair_prob"
+  type: "Softmax"
+  bottom: "wavy_hair_score"
+  top: "wavy_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+#== group 7, loss of 5_o_Clock_Shadow attr ==
+layer {
+  name: "5_shadow_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "5_shadow_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "5_shadow_conv_relu"
+  bottom: "5_shadow_conv"
+  top: "5_shadow_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "5_o_clock_shadow_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "5_shadow_conv"
+  top: "5_o_clock_shadow_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "5_o_clock_shadow_relu"
+  type: "ReLU"
+  bottom: "5_o_clock_shadow_attr"
+  top: "5_o_clock_shadow_attr"
+}
+
+layer {
+  name: "5_o_clock_shadow_dropout"
+  type: "Dropout"
+  bottom: "5_o_clock_shadow_attr"
+  top: "5_o_clock_shadow_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "5_o_clock_shadow_score"
+  type: "InnerProduct"
+  bottom: "5_o_clock_shadow_attr"
+  top: "5_o_clock_shadow_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "5_o_clock_shadow_prob"
+  type: "Softmax"
+  bottom: "5_o_clock_shadow_score"
+  top: "5_o_clock_shadow_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 7, loss of Mustache attr ==
+layer {
+  name: "mustache_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "mustache_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "mustache_conv_relu"
+  bottom: "mustache_conv"
+  top: "mustache_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "mustache_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "mustache_conv"
+  top: "mustache_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "mustache_relu"
+  type: "ReLU"
+  bottom: "mustache_attr"
+  top: "mustache_attr"
+}
+
+layer {
+  name: "mustache_dropout"
+  type: "Dropout"
+  bottom: "mustache_attr"
+  top: "mustache_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "mustache_score"
+  type: "InnerProduct"
+  bottom: "mustache_attr"
+  top: "mustache_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "mustache_prob"
+  type: "Softmax"
+  bottom: "mustache_score"
+  top: "mustache_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 7, loss of No_Beard attr ==
+layer {
+  name: "no_beard_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "no_beard_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "no_beard_conv_relu"
+  bottom: "no_beard_conv"
+  top: "no_beard_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "no_beard_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "no_beard_conv"
+  top: "no_beard_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "no_beard_relu"
+  type: "ReLU"
+  bottom: "no_beard_attr"
+  top: "no_beard_attr"
+}
+
+layer {
+  name: "no_beard_dropout"
+  type: "Dropout"
+  bottom: "no_beard_attr"
+  top: "no_beard_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "no_beard_score"
+  type: "InnerProduct"
+  bottom: "no_beard_attr"
+  top: "no_beard_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "no_beard_prob"
+  type: "Softmax"
+  bottom: "no_beard_score"
+  top: "no_beard_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 7, loss of Sideburns attr ==
+layer {
+  name: "sideburns_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "sideburns_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "sideburns_conv_relu"
+  bottom: "sideburns_conv"
+  top: "sideburns_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "sideburns_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "sideburns_conv"
+  top: "sideburns_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+layer {
+  name: "sideburns_relu"
+  type: "ReLU"
+  bottom: "sideburns_attr"
+  top: "sideburns_attr"
+}
+
+layer {
+  name: "sideburns_dropout"
+  type: "Dropout"
+  bottom: "sideburns_attr"
+  top: "sideburns_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "sideburns_score"
+  type: "InnerProduct"
+  bottom: "sideburns_attr"
+  top: "sideburns_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "sideburns_prob"
+  type: "Softmax"
+  bottom: "sideburns_score"
+  top: "sideburns_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 7, loss of Goatee attr ==
+layer {
+  name: "goatee_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "goatee_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "goatee_conv_relu"
+  bottom: "goatee_conv"
+  top: "goatee_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "goatee_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "goatee_conv"
+  top: "goatee_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "goatee_relu"
+  type: "ReLU"
+  bottom: "goatee_attr"
+  top: "goatee_attr"
+}
+
+layer {
+  name: "goatee_dropout"
+  type: "Dropout"
+  bottom: "goatee_attr"
+  top: "goatee_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "goatee_score"
+  type: "InnerProduct"
+  bottom: "goatee_attr"
+  top: "goatee_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "goatee_prob"
+  type: "Softmax"
+  bottom: "goatee_score"
+  top: "goatee_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 8, loss of High_Cheekbones attr ==
+layer {
+  name: "h_cheek_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "h_cheek_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "h_cheek_conv_relu"
+  bottom: "h_cheek_conv"
+  top: "h_cheek_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "high_cheekbones_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "h_cheek_conv"
+  top: "high_cheekbones_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "high_cheekbones_relu"
+  type: "ReLU"
+  bottom: "high_cheekbones_attr"
+  top: "high_cheekbones_attr"
+}
+
+layer {
+  name: "high_cheekbones_dropout"
+  type: "Dropout"
+  bottom: "high_cheekbones_attr"
+  top: "high_cheekbones_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "high_cheekbones_score"
+  type: "InnerProduct"
+  bottom: "high_cheekbones_attr"
+  top: "high_cheekbones_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "high_cheekbones_prob"
+  type: "Softmax"
+  bottom: "high_cheekbones_score"
+  top: "high_cheekbones_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 8, loss of Rosy_Cheeks attr ==
+layer {
+  name: "rosy_cheeks_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "rosy_cheeks_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "rosy_cheeks_conv_relu"
+  bottom: "rosy_cheeks_conv"
+  top: "rosy_cheeks_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "rosy_cheeks_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "rosy_cheeks_conv"
+  top: "rosy_cheeks_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "rosy_cheeks_relu"
+  type: "ReLU"
+  bottom: "rosy_cheeks_attr"
+  top: "rosy_cheeks_attr"
+}
+
+layer {
+  name: "rosy_cheeks_dropout"
+  type: "Dropout"
+  bottom: "rosy_cheeks_attr"
+  top: "rosy_cheeks_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "rosy_cheeks_score"
+  type: "InnerProduct"
+  bottom: "rosy_cheeks_attr"
+  top: "rosy_cheeks_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "rosy_cheeks_prob"
+  type: "Softmax"
+  bottom: "rosy_cheeks_score"
+  top: "rosy_cheeks_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 9, loss of Chubby attr ==
+layer {
+  name: "chubby_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "chubby_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "chubby_conv_relu"
+  bottom: "chubby_conv"
+  top: "chubby_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "chubby_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "chubby_conv"
+  top: "chubby_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "chubby_relu"
+  type: "ReLU"
+  bottom: "chubby_attr"
+  top: "chubby_attr"
+}
+
+layer {
+  name: "chubby_dropout"
+  type: "Dropout"
+  bottom: "chubby_attr"
+  top: "chubby_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "chubby_score"
+  type: "InnerProduct"
+  bottom: "chubby_attr"
+  top: "chubby_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "chubby_prob"
+  type: "Softmax"
+  bottom: "chubby_score"
+  top: "chubby_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#== group 9, loss of Double_Chin attr ==
+layer {
+  name: "d_chin_conv"
+  bottom: "roi_pool_conv5_reshape"
+  top: "d_chin_conv"
+  type: "Convolution"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+
+layer{
+  name: "d_chin_conv_relu"
+  bottom: "d_chin_conv"
+  top: "d_chin_conv"
+  type: "ReLU"
+}
+
+layer {
+  name: "double_chin_attr"
+  type: "InnerProduct"
+  #bottom: "part_shared_conv2"
+  bottom: "d_chin_conv"
+  top: "double_chin_attr"
+  param {lr_mult: 1.0}
+  param {lr_mult: 2.0}
+  inner_product_param {
+    num_output: 512
+    weight_filler { type: "xavier" }
+  }
+}
+
+layer {
+  name: "double_chin_relu"
+  type: "ReLU"
+  bottom: "double_chin_attr"
+  top: "double_chin_attr"
+}
+
+layer {
+  name: "double_chin_dropout"
+  type: "Dropout"
+  bottom: "double_chin_attr"
+  top: "double_chin_attr"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
+layer {
+  name: "double_chin_score"
+  type: "InnerProduct"
+  bottom: "double_chin_attr"
+  top: "double_chin_score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+
+layer {
+  name: "double_chin_prob"
+  type: "Softmax"
+  bottom: "double_chin_score"
+  top: "double_chin_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}

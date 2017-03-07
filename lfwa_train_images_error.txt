@@ -1,0 +1,481 @@
+######## image 1, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Ed_Rosenthal/Ed_Rosenthal_0001.jpg ########
+(166.0, 133.0, -65286.0, 193.0)
+(166.0, 189.0, -65286.0, 237.0)
+
+
+######## image 2, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Megawati_Sukarnoputri/Megawati_Sukarnoputri_0025.jpg ########
+(148.0, 65535.0, -65286.0, 75.0)
+(148.0, 82.0, -65286.0, 143.0)
+
+
+######## image 3, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Billy_Crystal/Billy_Crystal_0005.jpg ########
+(195.0, 113.0, -65286.0, 147.0)
+(195.0, 146.0, -65286.0, 173.0)
+
+
+######## image 4, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Mesut_Yilmaz/Mesut_Yilmaz_0001.jpg ########
+(174.0, 65535.0, -65286.0, 61.0)
+(174.0, 82.0, -65286.0, 132.0)
+
+
+######## image 5, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Yuri_Malenchenko/Yuri_Malenchenko_0002.jpg ########
+(138.0, 49.0, -65286.0, 137.0)
+(138.0, 134.0, -65286.0, 204.0)
+
+
+######## image 6, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Moshe_Katsav/Moshe_Katsav_0003.jpg ########
+(150.0, 65535.0, -65286.0, 81.0)
+(150.0, 82.0, -65286.0, 148.0)
+
+
+######## image 7, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Ali_Abbas/Ali_Abbas_0001.jpg ########
+(125.0, 38.0, -65286.0, 112.0)
+(125.0, 109.0, -65286.0, 169.0)
+
+
+######## image 8, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Mahathir_Mohamad/Mahathir_Mohamad_0009.jpg ########
+(171.0, 61.0, -65286.0, 125.0)
+(171.0, 121.0, -65286.0, 172.0)
+
+
+######## image 9, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Colin_Powell/Colin_Powell_0110.jpg ########
+(193.0, 124.0, -65286.0, 164.0)
+(193.0, 164.0, -65286.0, 196.0)
+
+
+######## image 10, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Joerg_Haider/Joerg_Haider_0001.jpg ########
+(171.0, 70.0, -65286.0, 124.0)
+(171.0, 122.0, -65286.0, 165.0)
+
+
+######## image 11, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Kurt_Russell/Kurt_Russell_0002.jpg ########
+(180.0, 41.0, -65286.0, 85.0)
+(180.0, 85.0, -65286.0, 121.0)
+
+
+######## image 12, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/John_McEnroe/John_McEnroe_0002.jpg ########
+(158.0, 23.0, -65286.0, 115.0)
+(158.0, 113.0, -65286.0, 187.0)
+
+
+######## image 13, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Jennifer_Aniston/Jennifer_Aniston_0015.jpg ########
+(201.0, 126.0, -65286.0, 162.0)
+(201.0, 162.0, -65286.0, 191.0)
+
+
+######## image 14, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Wen_Ho_Lee/Wen_Ho_Lee_0001.jpg ########
+(175.0, 26.0, -65286.0, 70.0)
+(175.0, 82.0, -65286.0, 118.0)
+(184.0, 37.0, -65286.0, 103.0)
+
+
+######## image 15, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Vladimir_Voltchkov/Vladimir_Voltchkov_0002.jpg ########
+(124.0, 127.0, -65286.0, 203.0)
+(124.0, 199.0, -65286.0, 249.0)
+
+
+######## image 16, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Zalmay_Khalilzad/Zalmay_Khalilzad_0001.jpg ########
+(145.0, 10.0, -65286.0, 94.0)
+(145.0, 93.0, -65286.0, 160.0)
+
+
+######## image 17, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Hugo_Chavez/Hugo_Chavez_0067.jpg ########
+(157.0, 65535.0, -65286.0, 83.0)
+(157.0, 82.0, -65286.0, 150.0)
+
+
+######## image 18, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Nestor_Kirchner/Nestor_Kirchner_0032.jpg ########
+(144.0, 9.0, -65286.0, 93.0)
+(144.0, 90.0, -65286.0, 157.0)
+
+
+######## image 19, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/John_Ashcroft/John_Ashcroft_0008.jpg ########
+(174.0, 141.0, -65286.0, 169.0)
+(145.0, 77.0, -65286.0, 171.0)
+(145.0, 166.0, -65286.0, 241.0)
+
+
+######## image 20, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Joe_Dumars/Joe_Dumars_0001.jpg ########
+(177.0, 78.0, -65286.0, 132.0)
+(177.0, 128.0, -65286.0, 171.0)
+
+
+######## image 21, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Colin_Powell/Colin_Powell_0171.jpg ########
+(169.0, 80.0, -65286.0, 146.0)
+(169.0, 146.0, -65286.0, 199.0)
+
+
+######## image 22, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Paul_Burrell/Paul_Burrell_0002.jpg ########
+(140.0, 71.0, -65286.0, 145.0)
+(140.0, 143.0, -65286.0, 203.0)
+
+
+######## image 23, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Billy_Crawford/Billy_Crawford_0001.jpg ########
+(128.0, 65535.0, -65286.0, 93.0)
+(128.0, 82.0, -65286.0, 158.0)
+
+
+######## image 24, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Kate_Burton/Kate_Burton_0001.jpg ########
+(168.0, 65535.0, -65286.0, 51.0)
+(168.0, 82.0, -65286.0, 124.0)
+
+
+######## image 25, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/John_Ashcroft/John_Ashcroft_0003.jpg ########
+(132.0, 16.0, -65286.0, 114.0)
+(132.0, 109.0, -65286.0, 188.0)
+
+
+######## image 26, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Larry_Lucchino/Larry_Lucchino_0001.jpg ########
+(156.0, 51.0, -65286.0, 139.0)
+(156.0, 134.0, -65286.0, 204.0)
+
+
+######## image 27, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Colin_Powell/Colin_Powell_0070.jpg ########
+(160.0, 65535.0, -65286.0, 89.0)
+(160.0, 82.0, -65286.0, 154.0)
+
+
+######## image 28, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Angel_Maza/Angel_Maza_0001.jpg ########
+(139.0, 65535.0, -65286.0, 77.0)
+(139.0, 82.0, -65286.0, 145.0)
+
+
+######## image 29, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/David_Stern/David_Stern_0003.jpg ########
+(183.0, 55.0, -65286.0, 109.0)
+(183.0, 106.0, -65286.0, 149.0)
+(197.0, 79.0, -65286.0, 132.0)
+
+
+######## image 30, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Julia_Ormond/Julia_Ormond_0001.jpg ########
+(164.0, 65535.0, -65286.0, 65.0)
+(164.0, 82.0, -65286.0, 135.0)
+
+
+######## image 31, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Joseph_Ganim/Joseph_Ganim_0001.jpg ########
+(191.0, 76.0, -65286.0, 118.0)
+(191.0, 117.0, -65286.0, 151.0)
+
+
+######## image 32, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Christine_Rau/Christine_Rau_0001.jpg ########
+(176.0, 31.0, -65286.0, 95.0)
+(176.0, 89.0, -65286.0, 140.0)
+
+
+######## image 33, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Ismail_Cem/Ismail_Cem_0001.jpg ########
+(136.0, 52.0, -65286.0, 134.0)
+(136.0, 133.0, -65286.0, 198.0)
+
+
+######## image 34, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Harrison_Ford/Harrison_Ford_0003.jpg ########
+(178.0, 65535.0, -65286.0, 57.0)
+(178.0, 82.0, -65286.0, 129.0)
+
+
+######## image 35, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Alvaro_Uribe/Alvaro_Uribe_0015.jpg ########
+(169.0, 65535.0, -65286.0, 57.0)
+(169.0, 82.0, -65286.0, 129.0)
+
+
+######## image 36, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Anna_Jones/Anna_Jones_0001.jpg ########
+(157.0, 65535.0, -65286.0, 77.0)
+(157.0, 82.0, -65286.0, 145.0)
+
+
+######## image 37, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Lea_Fastow/Lea_Fastow_0001.jpg ########
+(200.0, 85.0, -65286.0, 135.0)
+(200.0, 131.0, -65286.0, 171.0)
+
+
+######## image 38, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Kamal_Kharrazi/Kamal_Kharrazi_0002.jpg ########
+(172.0, 86.0, -65286.0, 148.0)
+(172.0, 146.0, -65286.0, 196.0)
+
+
+######## image 39, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Colin_Powell/Colin_Powell_0157.jpg ########
+(199.0, 148.0, -65286.0, 164.0)
+(179.0, 109.0, -65286.0, 165.0)
+(179.0, 164.0, -65286.0, 209.0)
+
+
+######## image 40, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Junichiro_Koizumi/Junichiro_Koizumi_0017.jpg ########
+(168.0, 33.0, -65286.0, 105.0)
+(168.0, 102.0, -65286.0, 160.0)
+
+
+######## image 41, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/David_Hyde_Pierce/David_Hyde_Pierce_0002.jpg ########
+(151.0, 104.0, -65286.0, 194.0)
+(151.0, 190.0, -65286.0, 249.0)
+
+
+######## image 42, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Arnold_Schwarzenegger/Arnold_Schwarzenegger_0007.jpg ########
+(180.0, 147.0, -65286.0, 171.0)
+(185.0, 169.0, -65286.0, 189.0)
+(185.0, 184.0, -65286.0, 208.0)
+(151.0, 94.0, -65286.0, 172.0)
+(151.0, 170.0, -65286.0, 232.0)
+
+
+######## image 43, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Mahmoud_Abbas/Mahmoud_Abbas_0004.jpg ########
+(202.0, 191.0, -65286.0, 221.0)
+(202.0, 218.0, -65286.0, 242.0)
+
+
+######## image 44, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Greg_Ostertag/Greg_Ostertag_0001.jpg ########
+(139.0, 2.0, -65286.0, 76.0)
+(139.0, 82.0, -65286.0, 142.0)
+
+
+######## image 45, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Colin_Powell/Colin_Powell_0068.jpg ########
+(138.0, 16.0, -65286.0, 124.0)
+(138.0, 121.0, -65286.0, 207.0)
+
+
+######## image 46, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/David_Bell/David_Bell_0001.jpg ########
+(138.0, 56.0, -65286.0, 142.0)
+(138.0, 140.0, -65286.0, 209.0)
+
+
+######## image 47, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/David_Anderson/David_Anderson_0001.jpg ########
+(202.0, 61.0, -65286.0, 75.0)
+(184.0, 31.0, -65286.0, 75.0)
+(184.0, 82.0, -65286.0, 118.0)
+
+
+######## image 48, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Hans_Blix/Hans_Blix_0003.jpg ########
+(157.0, 20.0, -65286.0, 100.0)
+(157.0, 98.0, -65286.0, 162.0)
+
+
+######## image 49, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Jennifer_Garner/Jennifer_Garner_0012.jpg ########
+(176.0, 31.0, -65286.0, 97.0)
+(176.0, 96.0, -65286.0, 149.0)
+
+
+######## image 50, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Paul_Burrell/Paul_Burrell_0008.jpg ########
+(173.0, 139.0, -65286.0, 165.0)
+(143.0, 79.0, -65286.0, 167.0)
+(143.0, 166.0, -65286.0, 236.0)
+
+
+######## image 51, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Frank_Abagnale_Jr/Frank_Abagnale_Jr_0001.jpg ########
+(115.0, 30.0, -65286.0, 118.0)
+(115.0, 116.0, -65286.0, 186.0)
+
+
+######## image 52, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Abdullah/Abdullah_0001.jpg ########
+(194.0, 128.0, -65286.0, 144.0)
+(173.0, 91.0, -65286.0, 145.0)
+(173.0, 145.0, -65286.0, 188.0)
+
+
+######## image 53, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Hugo_Chavez/Hugo_Chavez_0051.jpg ########
+(164.0, 65535.0, -65286.0, 65.0)
+(164.0, 82.0, -65286.0, 135.0)
+
+
+######## image 54, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Wendy_Kennedy/Wendy_Kennedy_0001.jpg ########
+(145.0, 65535.0, -65286.0, 65.0)
+(145.0, 82.0, -65286.0, 135.0)
+
+
+######## image 55, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Melanie_Griffith/Melanie_Griffith_0001.jpg ########
+(189.0, 21.0, -65286.0, 73.0)
+(189.0, 82.0, -65286.0, 124.0)
+
+
+######## image 56, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Colin_Powell/Colin_Powell_0206.jpg ########
+(121.0, 89.0, -65286.0, 181.0)
+(121.0, 178.0, -65286.0, 249.0)
+
+
+######## image 57, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Jason_Kidd/Jason_Kidd_0009.jpg ########
+(136.0, 65535.0, -65286.0, 91.0)
+(136.0, 82.0, -65286.0, 156.0)
+
+
+######## image 58, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Alvaro_Uribe/Alvaro_Uribe_0016.jpg ########
+(169.0, 37.0, -65286.0, 107.0)
+(169.0, 104.0, -65286.0, 160.0)
+
+
+######## image 59, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Bill_Clinton/Bill_Clinton_0009.jpg ########
+(91.0, 65535.0, -65286.0, 109.0)
+(91.0, 83.0, -65286.0, 171.0)
+
+
+######## image 60, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Tom_Daschle/Tom_Daschle_0009.jpg ########
+(180.0, 62.0, -65286.0, 116.0)
+(180.0, 113.0, -65286.0, 156.0)
+
+
+######## image 61, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Suh_Young-hoon/Suh_Young-hoon_0001.jpg ########
+(151.0, 75.0, -65286.0, 151.0)
+(151.0, 148.0, -65286.0, 208.0)
+
+
+######## image 62, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Todd_Haynes/Todd_Haynes_0001.jpg ########
+(103.0, 77.0, -65286.0, 173.0)
+(103.0, 171.0, -65286.0, 248.0)
+
+
+######## image 63, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Howard_Dean/Howard_Dean_0002.jpg ########
+(169.0, 91.0, -65286.0, 139.0)
+(169.0, 136.0, -65286.0, 174.0)
+
+
+######## image 64, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Pamela_Anderson/Pamela_Anderson_0005.jpg ########
+(184.0, 113.0, -65286.0, 163.0)
+(184.0, 162.0, -65286.0, 202.0)
+
+
+######## image 65, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Nick_Rahall/Nick_Rahall_0001.jpg ########
+(146.0, 65535.0, -65286.0, 91.0)
+(146.0, 82.0, -65286.0, 156.0)
+
+
+######## image 66, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Junichiro_Koizumi/Junichiro_Koizumi_0029.jpg ########
+(133.0, 18.0, -65286.0, 122.0)
+(133.0, 120.0, -65286.0, 204.0)
+
+
+######## image 67, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Jose_Viegas_Filho/Jose_Viegas_Filho_0002.jpg ########
+(185.0, 52.0, -65286.0, 104.0)
+(185.0, 104.0, -65286.0, 145.0)
+
+
+######## image 68, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Nestor_Kirchner/Nestor_Kirchner_0002.jpg ########
+(147.0, 8.0, -65286.0, 92.0)
+(147.0, 91.0, -65286.0, 158.0)
+
+
+######## image 69, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Jerry_Regier/Jerry_Regier_0001.jpg ########
+(146.0, 65535.0, -65286.0, 91.0)
+(146.0, 82.0, -65286.0, 156.0)
+
+
+######## image 70, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Roh_Moo-hyun/Roh_Moo-hyun_0032.jpg ########
+(183.0, 83.0, -65286.0, 99.0)
+(157.0, 46.0, -65286.0, 100.0)
+(157.0, 98.0, -65286.0, 141.0)
+
+
+######## image 71, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Paul_Shanley/Paul_Shanley_0002.jpg ########
+(181.0, 119.0, -65286.0, 171.0)
+(181.0, 169.0, -65286.0, 210.0)
+
+
+######## image 72, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Gerrit_Zalm/Gerrit_Zalm_0001.jpg ########
+(159.0, 65535.0, -65286.0, 75.0)
+(159.0, 82.0, -65286.0, 143.0)
+
+
+######## image 73, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Bill_Clinton/Bill_Clinton_0025.jpg ########
+(175.0, 132.0, -65286.0, 184.0)
+(175.0, 182.0, -65286.0, 223.0)
+
+
+######## image 74, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Vaclav_Havel/Vaclav_Havel_0001.jpg ########
+(157.0, 18.0, -65286.0, 70.0)
+(157.0, 82.0, -65286.0, 124.0)
+
+
+######## image 75, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Dorthy_Moxley/Dorthy_Moxley_0002.jpg ########
+(184.0, 18.0, -65286.0, 39.0)
+(160.0, 65535.0, -65286.0, 69.0)
+(160.0, 82.0, -65286.0, 138.0)
+
+
+######## image 76, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Nancy_Pelosi/Nancy_Pelosi_0010.jpg ########
+(169.0, 103.0, -65286.0, 181.0)
+(169.0, 179.0, -65286.0, 241.0)
+
+
+######## image 77, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/John_Ashcroft/John_Ashcroft_0007.jpg ########
+(159.0, 99.0, -65286.0, 161.0)
+(159.0, 161.0, -65286.0, 211.0)
+
+
+######## image 78, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Shaukat_Aziz/Shaukat_Aziz_0001.jpg ########
+(124.0, 65535.0, -65286.0, 93.0)
+(124.0, 82.0, -65286.0, 158.0)
+
+
+######## image 79, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Ian_Smith/Ian_Smith_0001.jpg ########
+(197.0, 65535.0, -65286.0, 39.0)
+(197.0, 82.0, -65286.0, 114.0)
+
+
+######## image 80, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Chris_Moore/Chris_Moore_0001.jpg ########
+(169.0, 127.0, -65286.0, 195.0)
+(169.0, 194.0, -65286.0, 249.0)
+
+
+######## image 81, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Rebecca_Romijn-Stamos/Rebecca_Romijn-Stamos_0003.jpg ########
+(181.0, 25.0, -65286.0, 75.0)
+(181.0, 82.0, -65286.0, 122.0)
+
+
+######## image 82, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Luiz_Inacio_Lula_da_Silva/Luiz_Inacio_Lula_da_Silva_0038.jpg ########
+(143.0, 65535.0, -65286.0, 69.0)
+(143.0, 82.0, -65286.0, 138.0)
+
+
+######## image 83, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Nino_DAngelo/Nino_DAngelo_0001.jpg ########
+(166.0, 87.0, -65286.0, 123.0)
+(166.0, 119.0, -65286.0, 148.0)
+
+
+######## image 84, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Joschka_Fischer/Joschka_Fischer_0015.jpg ########
+(191.0, 44.0, -65286.0, 106.0)
+(191.0, 105.0, -65286.0, 155.0)
+
+
+######## image 85, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Frances_Fisher/Frances_Fisher_0001.jpg ########
+(142.0, 65535.0, -65286.0, 111.0)
+(142.0, 82.0, -65286.0, 172.0)
+
+
+######## image 86, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/William_Ford_Jr/William_Ford_Jr_0006.jpg ########
+(193.0, 101.0, -65286.0, 141.0)
+(193.0, 140.0, -65286.0, 172.0)
+
+
+######## image 87, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/John_Howard/John_Howard_0018.jpg ########
+(141.0, 18.0, -65286.0, 120.0)
+(141.0, 113.0, -65286.0, 195.0)
+
+
+######## image 88, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Jiang_Zemin/Jiang_Zemin_0005.jpg ########
+(195.0, 78.0, -65286.0, 114.0)
+(195.0, 113.0, -65286.0, 142.0)
+
+
+######## image 89, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Jean-Claude_Van_Damme/Jean-Claude_Van_Damme_0001.jpg ########
+(190.0, 184.0, -65286.0, 230.0)
+(190.0, 229.0, -65286.0, 249.0)
+
+
+######## image 90, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Ludivine_Sagnier/Ludivine_Sagnier_0001.jpg ########
+(163.0, 46.0, -65286.0, 116.0)
+(163.0, 111.0, -65286.0, 167.0)
+
+
+######## image 91, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/George_Pataki/George_Pataki_0005.jpg ########
+(135.0, 54.0, -65286.0, 130.0)
+(135.0, 126.0, -65286.0, 186.0)
+
+
+######## image 92, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/John_Rigas/John_Rigas_0002.jpg ########
+(176.0, 14.0, -65286.0, 76.0)
+(176.0, 82.0, -65286.0, 132.0)
+
+
+######## image 93, /home/zengjiajian/py-faster-rcnn/data/CelebAdevkit/LFWA/JPEGImages/Saburo_Kawabuchi/Saburo_Kawabuchi_0002.jpg ########
+(175.0, 65535.0, -65286.0, 47.0)
+(175.0, 82.0, -65286.0, 121.0)
+
+
+######## The total number of images ########
+6241
+######## The total number of error images ########
+93
