@@ -56,7 +56,7 @@ esac
 
 #--weights data/imagenet_models/${NET}.v2.caffemodel \
 time ./tools/train_net.py --gpu ${GPU_ID} \
-  --solver models/${PT_DIR}/${NET}/faster_rcnn_end2end/solver.prototxt \
+  --solver models/${PT_DIR}/${NET}/faster_rcnn_end2end/alexnet_solver.prototxt \
   --imdb ${TRAIN_IMDB} \
   --iters ${ITERS} \
   --cfg experiments/cfgs/faster_rcnn_end2end.yml \

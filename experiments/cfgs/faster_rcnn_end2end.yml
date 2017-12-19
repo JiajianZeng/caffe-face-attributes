@@ -1,11 +1,24 @@
-EXP_DIR: faster_rcnn_end2end
+EXP_DIR: faster_rcnn_zf_end2end
 TRAIN:
   HAS_RPN: True
+  ASPECT_GROUPING: false
   IMS_PER_BATCH: 1
-  BBOX_NORMALIZE_TARGETS_PRECOMPUTED: True
-  RPN_POSITIVE_OVERLAP: 0.7
-  RPN_BATCHSIZE: 256
+  USE_FACE_ATTRIBUTES: True
   PROPOSAL_METHOD: gt
+  USE_FLIPPED: False
+
+  # used in rpn.anchor_target_layer
+  # anchor's overlap with gt box above this threshold
+  # will be given label 1
+  RPN_POSITIVE_OVERLAP: 0.7
+
+  # also used in rpn.anchor_target_layer
+  # in order to compute RPN classification and BBOX prediction loss,
+  # we need to sample bg and fg anchors, of which total size is RPN_BATCHSIZE
+  RPN_BATCHSIZE: 256
   BG_THRESH_LO: 0.0
+
+  BBOX_REG: False
 TEST:
   HAS_RPN: True
+  RPN_POST_NMS_TOP_N: 300

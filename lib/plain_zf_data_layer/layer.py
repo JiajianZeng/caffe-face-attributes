@@ -83,7 +83,7 @@ class PlainZFDataLayer(caffe.Layer):
         """Setup the PlainZFDataLayer."""
 
         # parse the layer parameter string, which must be valid YAML
-        layer_params = yaml.load(self.param_str_)
+        layer_params = yaml.load(self.param_str)
         self._name_to_top_map = {}
 
         # data blob: holds a batch of N images, each with 3 channels

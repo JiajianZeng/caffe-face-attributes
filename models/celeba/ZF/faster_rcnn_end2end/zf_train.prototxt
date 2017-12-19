@@ -1,9 +1,10 @@
 name: "ZF"
 layer {
-  name: 'data'
+  name: 'input-data'
   type: 'Python'
   top: 'data'
-
+  top: 'im_info'
+  top: 'gt_boxes'
   top: 'face_attrs'
   python_param {
     module: 'roi_data_layer.layer'
@@ -13,6 +14,7 @@ layer {
 }
 
 #========= face_attrs slice, of which the shape is N * 40 * 1 * 1 =========
+
 layer {
   name: "face_attrs_slice"
   type: "Slice"
@@ -132,6 +134,8 @@ layer {
     kernel_size: 7
     pad: 3
     stride: 2
+    # do not initialize from ImageNet pretrained model
+    weight_filler { type: "xavier" }
   }
 }
 layer {
@@ -177,6 +181,8 @@ layer {
     kernel_size: 5
     pad: 2
     stride: 2
+    # do not initialize from ImageNet pretrained model
+    weight_filler { type: "xavier" }
   }
 }
 layer {
@@ -222,6 +228,8 @@ layer {
     kernel_size: 3
     pad: 1
     stride: 1
+    # do not initialize from ImageNet pretrained model
+    weight_filler { type: "xavier" }
   }
 }
 layer {
@@ -242,6 +250,8 @@ layer {
     kernel_size: 3
     pad: 1
     stride: 1
+    # do not initialize from ImageNet pretrained model
+    weight_filler { type: "xavier" }
   }
 }
 layer {
@@ -262,6 +272,8 @@ layer {
     kernel_size: 3
     pad: 1
     stride: 1
+    # do not initialize from ImageNet pretrained model
+    weight_filler { type: "xavier" }
   }
 }
 layer {
@@ -271,13 +283,183 @@ layer {
   top: "conv5"
 }
 
+#========= RPN ============
+
+layer {
+  name: "rpn_conv/3x3"
+  type: "Convolution"
+  bottom: "conv5"
+  top: "rpn/output"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+    weight_filler { type: "gaussian" std: 0.01 }
+    bias_filler { type: "constant" value: 0 }
+  }
+}
+layer {
+  name: "rpn_relu/3x3"
+  type: "ReLU"
+  bottom: "rpn/output"
+  top: "rpn/output"
+}
+
+layer {
+  name: "rpn_cls_score"
+  type: "Convolution"
+  bottom: "rpn/output"
+  top: "rpn_cls_score"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 18   # 2(bg/fg) * 9(anchors)
+    kernel_size: 1 pad: 0 stride: 1
+    weight_filler { type: "gaussian" std: 0.01 }
+    bias_filler { type: "constant" value: 0 }
+  }
+}
+layer {
+  name: "rpn_bbox_pred"
+  type: "Convolution"
+  bottom: "rpn/output"
+  top: "rpn_bbox_pred"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 36   # 4 * 9(anchors)
+    kernel_size: 1 pad: 0 stride: 1
+    weight_filler { type: "gaussian" std: 0.01 }
+    bias_filler { type: "constant" value: 0 }
+  }
+}
+layer {
+   bottom: "rpn_cls_score"
+   top: "rpn_cls_score_reshape"
+   name: "rpn_cls_score_reshape"
+   type: "Reshape"
+   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+}
+layer {
+  name: 'rpn-data'
+  type: 'Python'
+  bottom: 'rpn_cls_score'
+  bottom: 'gt_boxes'
+  bottom: 'im_info'
+  bottom: 'data'
+  top: 'rpn_labels'
+  top: 'rpn_bbox_targets'
+  top: 'rpn_bbox_inside_weights'
+  top: 'rpn_bbox_outside_weights'
+  python_param {
+    module: 'rpn.anchor_target_layer'
+    layer: 'AnchorTargetLayer'
+    param_str: "'feat_stride': 16"
+  }
+}
+layer {
+  name: "rpn_loss_cls"
+  type: "SoftmaxWithLoss"
+  bottom: "rpn_cls_score_reshape"
+  bottom: "rpn_labels"
+  propagate_down: 1
+  propagate_down: 0
+  top: "rpn_cls_loss"
+  loss_weight: 1
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+layer {
+  name: "rpn_loss_bbox"
+  type: "SmoothL1Loss"
+  bottom: "rpn_bbox_pred"
+  bottom: "rpn_bbox_targets"
+  bottom: 'rpn_bbox_inside_weights'
+  bottom: 'rpn_bbox_outside_weights'
+  top: "rpn_loss_bbox"
+  loss_weight: 1
+  smooth_l1_loss_param { sigma: 3.0 }
+}
+
+#========= RoI Proposal ============
+
+layer {
+  name: "rpn_cls_prob"
+  type: "Softmax"
+  bottom: "rpn_cls_score_reshape"
+  top: "rpn_cls_prob"
+}
+layer {
+  name: 'rpn_cls_prob_reshape'
+  type: 'Reshape'
+  bottom: 'rpn_cls_prob'
+  top: 'rpn_cls_prob_reshape'
+  reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
+}
+
+# post_nms_top_n rois generated
+layer {
+  name: 'proposal'
+  type: 'Python'
+  bottom: 'rpn_cls_prob_reshape'
+  bottom: 'rpn_bbox_pred'
+  bottom: 'im_info'
+  top: 'rpn_rois'
+  python_param {
+    module: 'rpn.proposal_layer'
+    layer: 'ProposalLayer'
+    param_str: "'feat_stride': 16"
+  }
+}
+
+# random sample rois comprising of bg and fg rois
+layer {
+  name: 'roi-data'
+  type: 'Python'
+  bottom: 'rpn_rois'
+  bottom: 'gt_boxes'
+  top: 'rois'
+  top: 'labels'
+  top: 'bbox_targets'
+  top: 'bbox_inside_weights'
+  top: 'bbox_outside_weights'
+  python_param {
+    module: 'rpn.proposal_target_layer'
+    layer: 'ProposalTargetLayer'
+    param_str: "'num_classes': 7"
+  }
+}
+
+# silence output we do not need
+layer {
+  name: "silence_bbox_targets"
+  type: "Silence"
+  bottom: "bbox_targets"
+}
+
+layer {
+  name: "silence_bbox_inside_weights"
+  type: "Silence"
+  bottom: "bbox_inside_weights"
+}
+
+layer {
+  name: "silence_bbox_outside_weights"
+  type: "Silence"
+  bottom: "bbox_outside_weights"
+}
+
+
 #========= RCNN for roi class prediction ============
 
 layer {
   name: "roi_pool_conv5_class_prediction"
   type: "ROIPooling"
   bottom: "conv5"
-  bottom: "rois_shuffled"
+  bottom: "rois"
   top: "roi_pool_conv5_class_prediction"
   roi_pooling_param {
     pooled_w: 6
@@ -286,7 +468,7 @@ layer {
   }
 }
 
-#========= loss of proposal cls =========
+#========= prob of proposal cls =========
 layer {
   name: "fc6"
   type: "InnerProduct"
@@ -312,7 +494,6 @@ layer {
   top: "fc6"
   dropout_param {
     dropout_ratio: 0.5
-    scale_train: false
   }
 }
 layer {
@@ -340,7 +521,6 @@ layer {
   top: "fc7"
   dropout_param {
     dropout_ratio: 0.5
-    scale_train: false
   }
 }
 layer {
@@ -360,11 +540,38 @@ layer {
   name: "loss_cls"
   type: "SoftmaxWithLoss"
   bottom: "cls_score"
-  bottom: "labels_shuffled"
+  bottom: "labels"
+  propagate_down: 1
+  propagate_down: 0
   top: "cls_loss"
   loss_param {
     ignore_label: -1
     normalize: true
+  }
+}
+
+layer {
+  name: "cls_prob"
+  type: "Softmax"
+  bottom: "cls_score"
+  top: "cls_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
+}
+
+#========= Select RoIs for fixed classes ============
+layer {
+  name: 'select_rois'
+  type: 'Python'
+  bottom: 'rois'
+  bottom: 'cls_prob'
+  top: 'select_rois'
+  python_param {
+    module: 'rpn.roi_select_layer'
+    layer: 'RoISelectLayer'
+    param_str: "'num_class': 7"
   }
 }
 
@@ -374,7 +581,7 @@ layer {
   name: "roi_pool_conv5"
   type: "ROIPooling"
   bottom: "conv5"
-  bottom: "rois"
+  bottom: "select_rois"
   top: "roi_pool_conv5"
   roi_pooling_param {
     pooled_w: 6
@@ -390,7 +597,7 @@ layer {
   top: "roi_pool_conv5_reshape"
   type: "Reshape"
   reshape_param {
-    shape { dim: 8 dim: -1 dim: 0 dim: 0 }
+    shape { dim: 1 dim: -1 dim: 0 dim: 0 }
   }
 }
 
@@ -487,6 +694,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "male_score"
   bottom: "Male_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "male_score_loss"
 }
 
@@ -539,6 +748,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "big_nose_score"
   bottom: "Big_Nose_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "big_nose_score_loss"
 }
 
@@ -591,6 +802,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "pointly_nose_score"
   bottom: "Pointly_Nose_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "pointly_nose_score_loss"
 }
 
@@ -643,6 +856,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "big_lips_score"
   bottom: "Big_Lips_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "big_lips_score_loss"
 }
 
@@ -695,6 +910,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "smiling_score"
   bottom: "Smiling_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "smiling_score_loss"
 }
 
@@ -747,6 +964,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "wearing_lipstick_score"
   bottom: "Wearing_Lipstick_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "wearing_lipstick_score_loss"
 }
 
@@ -799,6 +1018,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "mouth_slightly_open_score"
   bottom: "Mouth_Slightly_Open_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "mouth_slightly_open_score_loss"
 }
 
@@ -851,6 +1072,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "arched_eyebrows_score"
   bottom: "Arched_Eyebrows_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "arched_eyebrows_score_loss"
 }
 
@@ -903,6 +1126,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "bags_under_eyes_score"
   bottom: "Bags_Under_Eyes_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "bags_under_eyes_score_loss"
 }
 
@@ -955,6 +1180,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "bushy_eyebrows_score"
   bottom: "Bushy_Eyebrows_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "bushy_eyebrows_score_loss"
 }
 
@@ -1007,6 +1234,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "narrow_eyes_score"
   bottom: "Narrow_Eyes_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "narrow_eyes_score_loss"
 }
 
@@ -1059,6 +1288,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "eyeglasses_score"
   bottom: "Eyeglasses_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "eyeglasses_score_loss"
 }
 
@@ -1111,6 +1342,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "attractive_score"
   bottom: "Attractive_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "attractive_score_loss"
 }
 
@@ -1163,6 +1396,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "blurry_score"
   bottom: "Blurry_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "blurry_score_loss"
 }
 
@@ -1215,6 +1450,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "oval_face_score"
   bottom: "Oval_Face_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "oval_face_score_loss"
 }
 
@@ -1267,6 +1504,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "pale_skin_score"
   bottom: "Pale_Skin_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "pale_skin_score_loss"
 }
 
@@ -1319,6 +1558,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "young_score"
   bottom: "Young_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "young_score_loss"
 }
 
@@ -1371,6 +1612,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "heavy_makeup_score"
   bottom: "Heavy_Makeup_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "heavy_makeup_score_loss"
 }
 
@@ -1423,6 +1666,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "black_hair_score"
   bottom: "Black_Hair_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "black_hair_score_loss"
 }
 
@@ -1475,6 +1720,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "blond_hair_score"
   bottom: "Blond_Hair_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "blond_hair_score_loss"
 }
 
@@ -1527,6 +1774,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "brown_hair_score"
   bottom: "Brown_Hair_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "brown_hair_score_loss"
 }
 
@@ -1579,6 +1828,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "gray_hair_score"
   bottom: "Gray_Hair_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "gray_hair_score_loss"
 }
 
@@ -1631,6 +1882,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "wearing_earrings_score"
   bottom: "Wearing_Earrings_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "wearing_earrings_score_loss"
 }
 
@@ -1683,6 +1936,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "wearing_necklace_score"
   bottom: "Wearing_Necklace_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "wearing_necklace_score_loss"
 }
 
@@ -1735,6 +1990,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "wearing_necktie_score"
   bottom: "Wearing_Necktie_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "wearing_necktie_score_loss"
 }
 
@@ -1787,6 +2044,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "bald_score"
   bottom: "Bald_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "bald_score_loss"
 }
 
@@ -1839,6 +2098,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "receding_hairline_score"
   bottom: "Receding_Hairline_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "receding_hairline_score_loss"
 }
 
@@ -1891,6 +2152,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "bangs_score"
   bottom: "Bangs_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "bangs_score_loss"
 }
 
@@ -1943,6 +2206,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "wearing_hat_score"
   bottom: "Wearing_Hat_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "wearing_hat_score_loss"
 }
 
@@ -1995,6 +2260,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "straight_hair_score"
   bottom: "Straight_Hair_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "straight_hair_score_loss"
 }
 
@@ -2047,6 +2314,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "wavy_hair_score"
   bottom: "Wavy_Hair_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "wavy_hair_score_loss"
 }
 
@@ -2099,6 +2368,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "5_o_clock_shadow_score"
   bottom: "5_o_Clock_Shadow_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "5_o_clock_shadow_score_loss"
 }
 
@@ -2151,6 +2422,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "mustache_score"
   bottom: "Mustache_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "mustache_score_loss"
 }
 
@@ -2203,6 +2476,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "no_beard_score"
   bottom: "No_Beard_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "no_beard_score_loss"
 }
 
@@ -2255,6 +2530,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "sideburns_score"
   bottom: "Sideburns_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "sideburns_score_loss"
 }
 
@@ -2307,6 +2584,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "goatee_score"
   bottom: "Goatee_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "goatee_score_loss"
 }
 
@@ -2359,6 +2638,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "high_cheekbones_score"
   bottom: "High_Cheekbones_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "high_cheekbones_score_loss"
 }
 
@@ -2411,6 +2692,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "rosy_cheeks_score"
   bottom: "Rosy_Cheeks_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "rosy_cheeks_score_loss"
 }
 
@@ -2463,6 +2746,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "chubby_score"
   bottom: "Chubby_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "chubby_score_loss"
 }
 
@@ -2515,67 +2800,8 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "double_chin_score"
   bottom: "Double_Chin_label"
+  propagate_down: 1
+  propagate_down: 0
   top: "double_chin_score_loss"
 }
 
-#========= RPN ============
-# Dummy layers so that initial parameters are saved into the output net
-
-layer {
-  name: "rpn_conv1"
-  type: "Convolution"
-  bottom: "conv5"
-  top: "rpn_conv1"
-  param { lr_mult: 0 decay_mult: 0 }
-  param { lr_mult: 0 decay_mult: 0 }
-  convolution_param {
-    num_output: 256
-    kernel_size: 3 pad: 1 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
-  }
-}
-layer {
-  name: "rpn_relu1"
-  type: "ReLU"
-  bottom: "rpn_conv1"
-  top: "rpn_conv1"
-}
-layer {
-  name: "rpn_cls_score"
-  type: "Convolution"
-  bottom: "rpn_conv1"
-  top: "rpn_cls_score"
-  param { lr_mult: 0 decay_mult: 0 }
-  param { lr_mult: 0 decay_mult: 0 }
-  convolution_param {
-    num_output: 18   # 2(bg/fg) * 9(anchors)
-    kernel_size: 1 pad: 0 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
-  }
-}
-layer {
-  name: "rpn_bbox_pred"
-  type: "Convolution"
-  bottom: "rpn_conv1"
-  top: "rpn_bbox_pred"
-  param { lr_mult: 0 decay_mult: 0 }
-  param { lr_mult: 0 decay_mult: 0 }
-  convolution_param {
-    num_output: 36   # 4 * 9(anchors)
-    kernel_size: 1 pad: 0 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
-  }
-}
-layer {
-  name: "silence_rpn_cls_score"
-  type: "Silence"
-  bottom: "rpn_cls_score"
-}
-layer {
-  name: "silence_rpn_bbox_pred"
-  type: "Silence"
-  bottom: "rpn_bbox_pred"
-}

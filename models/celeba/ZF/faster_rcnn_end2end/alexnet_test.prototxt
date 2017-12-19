@@ -1,156 +1,48 @@
-name: "ZF"
-layer {
-  name: 'data'
-  type: 'Python'
-  top: 'data'
+name: "alexnet"
 
-  top: 'face_attrs'
-  python_param {
-    module: 'roi_data_layer.layer'
-    layer: 'RoIDataLayer'
-    param_str: "'num_classes': 7"
-  }
+input: "data"
+input_shape {
+  dim: 1
+  dim: 3
+  dim: 224
+  dim: 224
 }
 
-#========= face_attrs slice, of which the shape is N * 40 * 1 * 1 =========
-layer {
-  name: "face_attrs_slice"
-  type: "Slice"
-  bottom: "face_attrs"
-
-  top: "5_o_Clock_Shadow_label"
-  top: "Arched_Eyebrows_label"
-  top: "Attractive_label"
-  top: "Bags_Under_Eyes_label"
-  top: "Bald_label"
-
-  top: "Bangs_label"
-  top: "Big_Lips_label"
-  top: "Big_Nose_label"
-  top: "Black_Hair_label"
-  top: "Blond_Hair_label"
-
-  top: "Blurry_label"
-  top: "Brown_Hair_label"
-  top: "Bushy_Eyebrows_label"
-  top: "Chubby_label"
-  top: "Double_Chin_label"
-
-  top: "Eyeglasses_label"
-  top: "Goatee_label"
-  top: "Gray_Hair_label"
-  top: "Heavy_Makeup_label"
-  top: "High_Cheekbones_label"
-
-  top: "Male_label"
-  top: "Mouth_Slightly_Open_label"
-  top: "Mustache_label"
-  top: "Narrow_Eyes_label"
-  top: "No_Beard_label"
-
-  top: "Oval_Face_label"
-  top: "Pale_Skin_label"
-  top: "Pointly_Nose_label"
-  top: "Receding_Hairline_label"
-  top: "Rosy_Cheeks_label"
-
-  top: "Sideburns_label"
-  top: "Smiling_label"
-  top: "Straight_Hair_label"
-  top: "Wavy_Hair_label"
-  top: "Wearing_Earrings_label"
-
-  top: "Wearing_Hat_label"
-  top: "Wearing_Lipstick_label"
-  top: "Wearing_Necklace_label"
-  top: "Wearing_Necktie_label"
-  top: "Young_label"
-
-  slice_param {
-    axis: 1
-    slice_point: 1
-    slice_point: 2
-    slice_point: 3
-    slice_point: 4
-    slice_point: 5
-
-    slice_point: 6
-    slice_point: 7
-    slice_point: 8
-    slice_point: 9
-    slice_point: 10
-
-    slice_point: 11
-    slice_point: 12
-    slice_point: 13
-    slice_point: 14
-    slice_point: 15
-
-    slice_point: 16
-    slice_point: 17
-    slice_point: 18
-    slice_point: 19
-    slice_point: 20
-
-    slice_point: 21
-    slice_point: 22
-    slice_point: 23
-    slice_point: 24
-    slice_point: 25
-
-    slice_point: 26
-    slice_point: 27
-    slice_point: 28
-    slice_point: 29
-    slice_point: 30
-
-    slice_point: 31
-    slice_point: 32
-    slice_point: 33
-    slice_point: 34
-    slice_point: 35
-
-    slice_point: 36
-    slice_point: 37
-    slice_point: 38
-    slice_point: 39
-
-  }
+input: "im_info"
+input_shape {
+  dim: 1
+  dim: 3
 }
 
 #========= conv1-conv5 ============
-
 layer {
   name: "conv1"
   type: "Convolution"
   bottom: "data"
   top: "conv1"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 96
-    kernel_size: 7
-    pad: 3
-    stride: 2
+    kernel_size: 11
+    stride: 4
   }
 }
+
 layer {
   name: "relu1"
   type: "ReLU"
   bottom: "conv1"
   top: "conv1"
 }
+
 layer {
   name: "norm1"
   type: "LRN"
   bottom: "conv1"
   top: "norm1"
   lrn_param {
-    local_size: 3
-    alpha: 0.00005
+    local_size: 5
+    alpha: 0.0001
     beta: 0.75
-    norm_region: WITHIN_CHANNEL
-    engine: CAFFE
   }
 }
 layer {
@@ -159,10 +51,9 @@ layer {
   bottom: "norm1"
   top: "pool1"
   pooling_param {
+    pool: MAX
     kernel_size: 3
     stride: 2
-    pad: 1
-    pool: MAX
   }
 }
 layer {
@@ -170,13 +61,11 @@ layer {
   type: "Convolution"
   bottom: "pool1"
   top: "conv2"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 256
-    kernel_size: 5
     pad: 2
-    stride: 2
+    kernel_size: 5
+    # group: 2
   }
 }
 layer {
@@ -191,11 +80,9 @@ layer {
   bottom: "conv2"
   top: "norm2"
   lrn_param {
-    local_size: 3
-    alpha: 0.00005
+    local_size: 5
+    alpha: 0.0001
     beta: 0.75
-    norm_region: WITHIN_CHANNEL
-    engine: CAFFE
   }
 }
 layer {
@@ -204,10 +91,9 @@ layer {
   bottom: "norm2"
   top: "pool2"
   pooling_param {
+    pool: MAX
     kernel_size: 3
     stride: 2
-    pad: 1
-    pool: MAX
   }
 }
 layer {
@@ -215,13 +101,10 @@ layer {
   type: "Convolution"
   bottom: "pool2"
   top: "conv3"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 384
-    kernel_size: 3
     pad: 1
-    stride: 1
+    kernel_size: 3
   }
 }
 layer {
@@ -235,13 +118,11 @@ layer {
   type: "Convolution"
   bottom: "conv3"
   top: "conv4"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 384
-    kernel_size: 3
     pad: 1
-    stride: 1
+    kernel_size: 3
+    # group: 2
   }
 }
 layer {
@@ -255,13 +136,11 @@ layer {
   type: "Convolution"
   bottom: "conv4"
   top: "conv5"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 256
-    kernel_size: 3
     pad: 1
-    stride: 1
+    kernel_size: 3
+    # group: 2
   }
 }
 layer {
@@ -271,13 +150,91 @@ layer {
   top: "conv5"
 }
 
+#========= RPN ============
+
+layer {
+  name: "rpn_conv/3x3"
+  type: "Convolution"
+  bottom: "conv5"
+  top: "rpn/output"
+  convolution_param {
+    num_output: 256
+    kernel_size: 3 pad: 1 stride: 1
+  }
+}
+layer {
+  name: "rpn_relu/3x3"
+  type: "ReLU"
+  bottom: "rpn/output"
+  top: "rpn/output"
+}
+
+layer {
+  name: "rpn_cls_score"
+  type: "Convolution"
+  bottom: "rpn/output"
+  top: "rpn_cls_score"
+  convolution_param {
+    num_output: 18   # 2(bg/fg) * 9(anchors)
+    kernel_size: 1 pad: 0 stride: 1
+  }
+}
+layer {
+  name: "rpn_bbox_pred"
+  type: "Convolution"
+  bottom: "rpn/output"
+  top: "rpn_bbox_pred"
+  convolution_param {
+    num_output: 36   # 4 * 9(anchors)
+    kernel_size: 1 pad: 0 stride: 1
+  }
+}
+layer {
+   bottom: "rpn_cls_score"
+   top: "rpn_cls_score_reshape"
+   name: "rpn_cls_score_reshape"
+   type: "Reshape"
+   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+}
+
+#========= RoI Proposal ============
+
+layer {
+  name: "rpn_cls_prob"
+  type: "Softmax"
+  bottom: "rpn_cls_score_reshape"
+  top: "rpn_cls_prob"
+}
+layer {
+  name: 'rpn_cls_prob_reshape'
+  type: 'Reshape'
+  bottom: 'rpn_cls_prob'
+  top: 'rpn_cls_prob_reshape'
+  reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
+}
+
+# post_nms_top_n rois generated
+layer {
+  name: 'proposal'
+  type: 'Python'
+  bottom: 'rpn_cls_prob_reshape'
+  bottom: 'rpn_bbox_pred'
+  bottom: 'im_info'
+  top: 'rois'
+  python_param {
+    module: 'rpn.proposal_layer'
+    layer: 'ProposalLayer'
+    param_str: "'feat_stride': 16"
+  }
+}
+
 #========= RCNN for roi class prediction ============
 
 layer {
   name: "roi_pool_conv5_class_prediction"
   type: "ROIPooling"
   bottom: "conv5"
-  bottom: "rois_shuffled"
+  bottom: "rois"
   top: "roi_pool_conv5_class_prediction"
   roi_pooling_param {
     pooled_w: 6
@@ -286,17 +243,14 @@ layer {
   }
 }
 
-#========= loss of proposal cls =========
+#========= prob of proposal cls =========
 layer {
   name: "fc6"
   type: "InnerProduct"
   bottom: "roi_pool_conv5_class_prediction"
   top: "fc6"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 4096
-    weight_filler { type: "xavier" }
   }
 }
 layer {
@@ -312,7 +266,6 @@ layer {
   top: "fc6"
   dropout_param {
     dropout_ratio: 0.5
-    scale_train: false
   }
 }
 layer {
@@ -320,11 +273,8 @@ layer {
   type: "InnerProduct"
   bottom: "fc6"
   top: "fc7"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 4096
-    weight_filler { type: "xavier" }
   }
 }
 layer {
@@ -340,7 +290,6 @@ layer {
   top: "fc7"
   dropout_param {
     dropout_ratio: 0.5
-    scale_train: false
   }
 }
 layer {
@@ -348,23 +297,33 @@ layer {
   type: "InnerProduct"
   bottom: "fc7"
   top: "cls_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 7
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "loss_cls"
-  type: "SoftmaxWithLoss"
+  name: "cls_prob"
+  type: "Softmax"
   bottom: "cls_score"
-  bottom: "labels_shuffled"
-  top: "cls_loss"
+  top: "cls_prob"
   loss_param {
     ignore_label: -1
     normalize: true
+  }
+}
+
+#========= Select RoIs for fixed classes ============
+layer {
+  name: 'select_rois'
+  type: 'Python'
+  bottom: 'rois'
+  bottom: 'cls_prob'
+  top: 'select_rois'
+  python_param {
+    module: 'rpn.roi_select_layer'
+    layer: 'RoISelectLayer'
+    param_str: "'num_class': 7"
   }
 }
 
@@ -374,7 +333,7 @@ layer {
   name: "roi_pool_conv5"
   type: "ROIPooling"
   bottom: "conv5"
-  bottom: "rois"
+  bottom: "select_rois"
   top: "roi_pool_conv5"
   roi_pooling_param {
     pooled_w: 6
@@ -390,7 +349,7 @@ layer {
   top: "roi_pool_conv5_reshape"
   type: "Reshape"
   reshape_param {
-    shape { dim: 8 dim: -1 dim: 0 dim: 0 }
+    shape { dim: 1 dim: -1 dim: 0 dim: 0 }
   }
 }
 
@@ -399,12 +358,9 @@ layer {
   bottom: "roi_pool_conv5_reshape"
   top: "part_shared_conv1"
   type: "Convolution"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 128
     kernel_size: 3 pad: 1 stride: 1
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -420,12 +376,9 @@ layer {
   bottom: "part_shared_conv1"
   top: "part_shared_conv2"
   type: "Convolution"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 256
     kernel_size: 3 pad: 1 stride: 1
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -437,18 +390,14 @@ layer{
 }
 
 #========= attribute group 1 - group 9 =========
-
 #== group 1, loss of Male attr ==
 layer {
   name: "male_attr"
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "male_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -474,20 +423,20 @@ layer {
   type: "InnerProduct"
   bottom: "male_attr"
   top: "male_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "male_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "male_prob"
+  type: "Softmax"
   bottom: "male_score"
-  bottom: "Male_label"
-  top: "male_score_loss"
+  top: "male_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 2, loss of Big_Nose attr ==
@@ -496,11 +445,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "big_nose_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -526,20 +472,20 @@ layer {
   type: "InnerProduct"
   bottom: "big_nose_attr"
   top: "big_nose_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "big_nose_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "big_nose_prob"
+  type: "Softmax"
   bottom: "big_nose_score"
-  bottom: "Big_Nose_label"
-  top: "big_nose_score_loss"
+  top: "big_nose_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 2, loss of Pointly_Nose attr ==
@@ -548,11 +494,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "pointly_nose_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -578,20 +521,20 @@ layer {
   type: "InnerProduct"
   bottom: "pointly_nose_attr"
   top: "pointly_nose_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "pointly_nose_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "pointly_nose_prob"
+  type: "Softmax"
   bottom: "pointly_nose_score"
-  bottom: "Pointly_Nose_label"
-  top: "pointly_nose_score_loss"
+  top: "pointly_nose_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 3, loss of Big_Lips attr ==
@@ -600,11 +543,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "big_lips_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -630,20 +570,20 @@ layer {
   type: "InnerProduct"
   bottom: "big_lips_attr"
   top: "big_lips_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "big_lips_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "big_lips_prob"
+  type: "Softmax"
   bottom: "big_lips_score"
-  bottom: "Big_Lips_label"
-  top: "big_lips_score_loss"
+  top: "big_lips_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 3, loss of Smiling attr ==
@@ -652,11 +592,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "smiling_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -682,20 +619,20 @@ layer {
   type: "InnerProduct"
   bottom: "smiling_attr"
   top: "smiling_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "smiling_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "smiling_prob"
+  type: "Softmax"
   bottom: "smiling_score"
-  bottom: "Smiling_label"
-  top: "smiling_score_loss"
+  top: "smiling_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 3, loss of Wearing_Lipstick attr ==
@@ -704,11 +641,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "wearing_lipstick_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -734,20 +668,20 @@ layer {
   type: "InnerProduct"
   bottom: "wearing_lipstick_attr"
   top: "wearing_lipstick_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "wearing_lipstick_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "wearing_lipstick_prob"
+  type: "Softmax"
   bottom: "wearing_lipstick_score"
-  bottom: "Wearing_Lipstick_label"
-  top: "wearing_lipstick_score_loss"
+  top: "wearing_lipstick_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 3, loss of Mouth_Slightly_Open attr ==
@@ -756,11 +690,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "mouth_slightly_open_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -786,20 +717,20 @@ layer {
   type: "InnerProduct"
   bottom: "mouth_slightly_open_attr"
   top: "mouth_slightly_open_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "mouth_slightly_open_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "mouth_slightly_open_prob"
+  type: "Softmax"
   bottom: "mouth_slightly_open_score"
-  bottom: "Mouth_Slightly_Open_label"
-  top: "mouth_slightly_open_score_loss"
+  top: "mouth_slightly_open_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 4, loss of Arched_Eyebrows attr ==
@@ -808,11 +739,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "arched_eyebrows_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -838,20 +766,20 @@ layer {
   type: "InnerProduct"
   bottom: "arched_eyebrows_attr"
   top: "arched_eyebrows_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "arched_eyebrows_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "arched_eyebrows_prob"
+  type: "Softmax"
   bottom: "arched_eyebrows_score"
-  bottom: "Arched_Eyebrows_label"
-  top: "arched_eyebrows_score_loss"
+  top: "arched_eyebrows_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 4, loss of Bags_Under_eyes attr ==
@@ -860,11 +788,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "bags_under_eyes_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -890,20 +815,20 @@ layer {
   type: "InnerProduct"
   bottom: "bags_under_eyes_attr"
   top: "bags_under_eyes_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "bags_under_eyes_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "bags_under_eyes_prob"
+  type: "Softmax"
   bottom: "bags_under_eyes_score"
-  bottom: "Bags_Under_Eyes_label"
-  top: "bags_under_eyes_score_loss"
+  top: "bags_under_eyes_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 4, loss of Bushy_Eyebrows attr ==
@@ -912,11 +837,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "bushy_eyebrows_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -942,20 +864,20 @@ layer {
   type: "InnerProduct"
   bottom: "bushy_eyebrows_attr"
   top: "bushy_eyebrows_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "bushy_eyebrows_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "bushy_eyebrows_prob"
+  type: "Softmax"
   bottom: "bushy_eyebrows_score"
-  bottom: "Bushy_Eyebrows_label"
-  top: "bushy_eyebrows_score_loss"
+  top: "bushy_eyebrows_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 4, loss of Narrow_Eyes attr ==
@@ -964,11 +886,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "narrow_eyes_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -994,20 +913,20 @@ layer {
   type: "InnerProduct"
   bottom: "narrow_eyes_attr"
   top: "narrow_eyes_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "narrow_eyes_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "narrow_eyes_prob"
+  type: "Softmax"
   bottom: "narrow_eyes_score"
-  bottom: "Narrow_Eyes_label"
-  top: "narrow_eyes_score_loss"
+  top: "narrow_eyes_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 4, loss of Eyeglasses attr ==
@@ -1016,11 +935,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "eyeglasses_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1046,20 +962,20 @@ layer {
   type: "InnerProduct"
   bottom: "eyeglasses_attr"
   top: "eyeglasses_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "eyeglasses_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "eyeglasses_prob"
+  type: "Softmax"
   bottom: "eyeglasses_score"
-  bottom: "Eyeglasses_label"
-  top: "eyeglasses_score_loss"
+  top: "eyeglasses_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 5, loss of Attractive attr ==
@@ -1068,11 +984,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "attractive_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1098,20 +1011,20 @@ layer {
   type: "InnerProduct"
   bottom: "attractive_attr"
   top: "attractive_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "attractive_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "attractive_prob"
+  type: "Softmax"
   bottom: "attractive_score"
-  bottom: "Attractive_label"
-  top: "attractive_score_loss"
+  top: "attractive_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 5, loss of Blurry attr ==
@@ -1120,11 +1033,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "blurry_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1150,20 +1060,20 @@ layer {
   type: "InnerProduct"
   bottom: "blurry_attr"
   top: "blurry_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "blurry_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "blurry_prob"
+  type: "Softmax"
   bottom: "blurry_score"
-  bottom: "Blurry_label"
-  top: "blurry_score_loss"
+  top: "blurry_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 5, loss of Oval_Face attr ==
@@ -1172,11 +1082,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "oval_face_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1202,20 +1109,20 @@ layer {
   type: "InnerProduct"
   bottom: "oval_face_attr"
   top: "oval_face_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "oval_face_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "oval_face_prob"
+  type: "Softmax"
   bottom: "oval_face_score"
-  bottom: "Oval_Face_label"
-  top: "oval_face_score_loss"
+  top: "oval_face_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 5, loss of Pale_Skin attr ==
@@ -1224,11 +1131,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "pale_skin_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1254,20 +1158,20 @@ layer {
   type: "InnerProduct"
   bottom: "pale_skin_attr"
   top: "pale_skin_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "pale_skin_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "pale_skin_prob"
+  type: "Softmax"
   bottom: "pale_skin_score"
-  bottom: "Pale_Skin_label"
-  top: "pale_skin_score_loss"
+  top: "pale_skin_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 5, loss of Young attr ==
@@ -1276,11 +1180,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "young_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1306,20 +1207,20 @@ layer {
   type: "InnerProduct"
   bottom: "young_attr"
   top: "young_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "young_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "young_prob"
+  type: "Softmax"
   bottom: "young_score"
-  bottom: "Young_label"
-  top: "young_score_loss"
+  top: "young_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 5, loss of Heavy_Makeup attr ==
@@ -1328,11 +1229,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "heavy_makeup_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1358,20 +1256,20 @@ layer {
   type: "InnerProduct"
   bottom: "heavy_makeup_attr"
   top: "heavy_makeup_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "heavy_makeup_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "heavy_makeup_prob"
+  type: "Softmax"
   bottom: "heavy_makeup_score"
-  bottom: "Heavy_Makeup_label"
-  top: "heavy_makeup_score_loss"
+  top: "heavy_makeup_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Black_Hair attr ==
@@ -1380,11 +1278,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "black_hair_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1410,33 +1305,29 @@ layer {
   type: "InnerProduct"
   bottom: "black_hair_attr"
   top: "black_hair_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "black_hair_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "black_hair_prob"
+  type: "Softmax"
   bottom: "black_hair_score"
-  bottom: "Black_Hair_label"
-  top: "black_hair_score_loss"
+  top: "black_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
-
 #== group 6, loss of Blond_Hair attr ==
 layer {
   name: "blond_hair_attr"
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "blond_hair_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1462,20 +1353,20 @@ layer {
   type: "InnerProduct"
   bottom: "blond_hair_attr"
   top: "blond_hair_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "blond_hair_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "blond_hair_prob"
+  type: "Softmax"
   bottom: "blond_hair_score"
-  bottom: "Blond_Hair_label"
-  top: "blond_hair_score_loss"
+  top: "blond_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Brown_Hair attr ==
@@ -1484,11 +1375,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "brown_hair_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1514,33 +1402,29 @@ layer {
   type: "InnerProduct"
   bottom: "brown_hair_attr"
   top: "brown_hair_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "brown_hair_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "brown_hair_prob"
+  type: "Softmax"
   bottom: "brown_hair_score"
-  bottom: "Brown_Hair_label"
-  top: "brown_hair_score_loss"
+  top: "brown_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
-
 #== group 6, loss of Gray_Hair attr ==
 layer {
   name: "gray_hair_attr"
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "gray_hair_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1566,20 +1450,20 @@ layer {
   type: "InnerProduct"
   bottom: "gray_hair_attr"
   top: "gray_hair_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "gray_hair_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "gray_hair_prob"
+  type: "Softmax"
   bottom: "gray_hair_score"
-  bottom: "Gray_Hair_label"
-  top: "gray_hair_score_loss"
+  top: "gray_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Wearing_Earrings attr ==
@@ -1588,11 +1472,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "wearing_earrings_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1618,20 +1499,20 @@ layer {
   type: "InnerProduct"
   bottom: "wearing_earrings_attr"
   top: "wearing_earrings_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "wearing_earrings_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "wearing_earrings_prob"
+  type: "Softmax"
   bottom: "wearing_earrings_score"
-  bottom: "Wearing_Earrings_label"
-  top: "wearing_earrings_score_loss"
+  top: "wearing_earrings_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Wearing_Necklace attr ==
@@ -1640,11 +1521,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "wearing_necklace_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1670,20 +1548,20 @@ layer {
   type: "InnerProduct"
   bottom: "wearing_necklace_attr"
   top: "wearing_necklace_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "wearing_necklace_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "wearing_necklace_prob"
+  type: "Softmax"
   bottom: "wearing_necklace_score"
-  bottom: "Wearing_Necklace_label"
-  top: "wearing_necklace_score_loss"
+  top: "wearing_necklace_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Wearing_Necktie attr ==
@@ -1692,11 +1570,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "wearing_necktie_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1722,20 +1597,20 @@ layer {
   type: "InnerProduct"
   bottom: "wearing_necktie_attr"
   top: "wearing_necktie_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "wearing_necktie_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "wearing_necktie_prob"
+  type: "Softmax"
   bottom: "wearing_necktie_score"
-  bottom: "Wearing_Necktie_label"
-  top: "wearing_necktie_score_loss"
+  top: "wearing_necktie_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Bald attr ==
@@ -1744,11 +1619,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "bald_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1774,20 +1646,20 @@ layer {
   type: "InnerProduct"
   bottom: "bald_attr"
   top: "bald_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "bald_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "bald_prob"
+  type: "Softmax"
   bottom: "bald_score"
-  bottom: "Bald_label"
-  top: "bald_score_loss"
+  top: "bald_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Receding_Hairline attr ==
@@ -1796,11 +1668,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "receding_hairline_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1826,20 +1695,20 @@ layer {
   type: "InnerProduct"
   bottom: "receding_hairline_attr"
   top: "receding_hairline_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "receding_hairline_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "receding_hairline_prob"
+  type: "Softmax"
   bottom: "receding_hairline_score"
-  bottom: "Receding_Hairline_label"
-  top: "receding_hairline_score_loss"
+  top: "receding_hairline_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Bangs attr ==
@@ -1848,11 +1717,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "bangs_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1878,20 +1744,20 @@ layer {
   type: "InnerProduct"
   bottom: "bangs_attr"
   top: "bangs_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "bangs_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "bangs_prob"
+  type: "Softmax"
   bottom: "bangs_score"
-  bottom: "Bangs_label"
-  top: "bangs_score_loss"
+  top: "bangs_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Wearing_Hat attr ==
@@ -1900,11 +1766,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "wearing_hat_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1930,20 +1793,20 @@ layer {
   type: "InnerProduct"
   bottom: "wearing_hat_attr"
   top: "wearing_hat_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "wearing_hat_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "wearing_hat_prob"
+  type: "Softmax"
   bottom: "wearing_hat_score"
-  bottom: "Wearing_Hat_label"
-  top: "wearing_hat_score_loss"
+  top: "wearing_hat_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Straight_Hair attr ==
@@ -1952,11 +1815,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "straight_hair_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -1982,20 +1842,20 @@ layer {
   type: "InnerProduct"
   bottom: "straight_hair_attr"
   top: "straight_hair_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "straight_hair_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "straight_hair_prob"
+  type: "Softmax"
   bottom: "straight_hair_score"
-  bottom: "Straight_Hair_label"
-  top: "straight_hair_score_loss"
+  top: "straight_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 6, loss of Wavy_Hair attr ==
@@ -2004,11 +1864,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "wavy_hair_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2034,33 +1891,29 @@ layer {
   type: "InnerProduct"
   bottom: "wavy_hair_attr"
   top: "wavy_hair_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "wavy_hair_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "wavy_hair_prob"
+  type: "Softmax"
   bottom: "wavy_hair_score"
-  bottom: "Wavy_Hair_label"
-  top: "wavy_hair_score_loss"
+  top: "wavy_hair_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
-
 #== group 7, loss of 5_o_Clock_Shadow attr ==
 layer {
   name: "5_o_clock_shadow_attr"
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "5_o_clock_shadow_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2086,20 +1939,20 @@ layer {
   type: "InnerProduct"
   bottom: "5_o_clock_shadow_attr"
   top: "5_o_clock_shadow_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "5_o_clock_shadow_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "5_o_clock_shadow_prob"
+  type: "Softmax"
   bottom: "5_o_clock_shadow_score"
-  bottom: "5_o_Clock_Shadow_label"
-  top: "5_o_clock_shadow_score_loss"
+  top: "5_o_clock_shadow_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 7, loss of Mustache attr ==
@@ -2108,11 +1961,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "mustache_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2138,20 +1988,20 @@ layer {
   type: "InnerProduct"
   bottom: "mustache_attr"
   top: "mustache_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "mustache_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "mustache_prob"
+  type: "Softmax"
   bottom: "mustache_score"
-  bottom: "Mustache_label"
-  top: "mustache_score_loss"
+  top: "mustache_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 7, loss of No_Beard attr ==
@@ -2160,11 +2010,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "no_beard_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2190,20 +2037,20 @@ layer {
   type: "InnerProduct"
   bottom: "no_beard_attr"
   top: "no_beard_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "no_beard_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "no_beard_prob"
+  type: "Softmax"
   bottom: "no_beard_score"
-  bottom: "No_Beard_label"
-  top: "no_beard_score_loss"
+  top: "no_beard_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 7, loss of Sideburns attr ==
@@ -2212,11 +2059,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "sideburns_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2242,20 +2086,20 @@ layer {
   type: "InnerProduct"
   bottom: "sideburns_attr"
   top: "sideburns_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "sideburns_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "sideburns_prob"
+  type: "Softmax"
   bottom: "sideburns_score"
-  bottom: "Sideburns_label"
-  top: "sideburns_score_loss"
+  top: "sideburns_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 7, loss of Goatee attr ==
@@ -2264,11 +2108,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "goatee_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2294,20 +2135,20 @@ layer {
   type: "InnerProduct"
   bottom: "goatee_attr"
   top: "goatee_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "goatee_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "goatee_prob"
+  type: "Softmax"
   bottom: "goatee_score"
-  bottom: "Goatee_label"
-  top: "goatee_score_loss"
+  top: "goatee_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 8, loss of High_Cheekbones attr ==
@@ -2316,11 +2157,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "high_cheekbones_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2346,20 +2184,20 @@ layer {
   type: "InnerProduct"
   bottom: "high_cheekbones_attr"
   top: "high_cheekbones_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "high_cheekbones_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "high_cheekbones_prob"
+  type: "Softmax"
   bottom: "high_cheekbones_score"
-  bottom: "High_Cheekbones_label"
-  top: "high_cheekbones_score_loss"
+  top: "high_cheekbones_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 8, loss of Rosy_Cheeks attr ==
@@ -2368,11 +2206,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "rosy_cheeks_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2398,20 +2233,20 @@ layer {
   type: "InnerProduct"
   bottom: "rosy_cheeks_attr"
   top: "rosy_cheeks_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "rosy_cheeks_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "rosy_cheeks_prob"
+  type: "Softmax"
   bottom: "rosy_cheeks_score"
-  bottom: "Rosy_Cheeks_label"
-  top: "rosy_cheeks_score_loss"
+  top: "rosy_cheeks_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 9, loss of Chubby attr ==
@@ -2420,11 +2255,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "chubby_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2450,20 +2282,20 @@ layer {
   type: "InnerProduct"
   bottom: "chubby_attr"
   top: "chubby_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "chubby_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "chubby_prob"
+  type: "Softmax"
   bottom: "chubby_score"
-  bottom: "Chubby_label"
-  top: "chubby_score_loss"
+  top: "chubby_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #== group 9, loss of Double_Chin attr ==
@@ -2472,11 +2304,8 @@ layer {
   type: "InnerProduct"
   bottom: "part_shared_conv2"
   top: "double_chin_attr"
-  param {lr_mult: 1.0}
-  param {lr_mult: 2.0}
   inner_product_param {
     num_output: 512
-    weight_filler { type: "xavier" }
   }
 }
 
@@ -2502,80 +2331,19 @@ layer {
   type: "InnerProduct"
   bottom: "double_chin_attr"
   top: "double_chin_score"
-  param { lr_mult: 1.0 }
-  param { lr_mult: 2.0 }
   inner_product_param {
     num_output: 2
-    weight_filler { type: "xavier" }
   }
 }
 
 layer {
-  name: "double_chin_score_loss"
-  type: "SoftmaxWithLoss"
+  name: "double_chin_prob"
+  type: "Softmax"
   bottom: "double_chin_score"
-  bottom: "Double_Chin_label"
-  top: "double_chin_score_loss"
+  top: "double_chin_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
-#========= RPN ============
-# Dummy layers so that initial parameters are saved into the output net
-
-layer {
-  name: "rpn_conv1"
-  type: "Convolution"
-  bottom: "conv5"
-  top: "rpn_conv1"
-  param { lr_mult: 0 decay_mult: 0 }
-  param { lr_mult: 0 decay_mult: 0 }
-  convolution_param {
-    num_output: 256
-    kernel_size: 3 pad: 1 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
-  }
-}
-layer {
-  name: "rpn_relu1"
-  type: "ReLU"
-  bottom: "rpn_conv1"
-  top: "rpn_conv1"
-}
-layer {
-  name: "rpn_cls_score"
-  type: "Convolution"
-  bottom: "rpn_conv1"
-  top: "rpn_cls_score"
-  param { lr_mult: 0 decay_mult: 0 }
-  param { lr_mult: 0 decay_mult: 0 }
-  convolution_param {
-    num_output: 18   # 2(bg/fg) * 9(anchors)
-    kernel_size: 1 pad: 0 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
-  }
-}
-layer {
-  name: "rpn_bbox_pred"
-  type: "Convolution"
-  bottom: "rpn_conv1"
-  top: "rpn_bbox_pred"
-  param { lr_mult: 0 decay_mult: 0 }
-  param { lr_mult: 0 decay_mult: 0 }
-  convolution_param {
-    num_output: 36   # 4 * 9(anchors)
-    kernel_size: 1 pad: 0 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
-  }
-}
-layer {
-  name: "silence_rpn_cls_score"
-  type: "Silence"
-  bottom: "rpn_cls_score"
-}
-layer {
-  name: "silence_rpn_bbox_pred"
-  type: "Silence"
-  bottom: "rpn_bbox_pred"
-}

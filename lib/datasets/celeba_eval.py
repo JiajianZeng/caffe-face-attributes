@@ -213,7 +213,8 @@ def roc_curve_single_attribute(attrpath,
                                annopath,
                                imagesetfile,
                                attr_name,
-                               cachedir):
+                               cachedir,
+                               plot=None):
     # first load gt
     if not os.path.isdir(cachedir):
         os.mkdir(cachedir)
@@ -257,7 +258,8 @@ def roc_curve_single_attribute(attrpath,
     splitlines = [x.strip().split(' ') for x in lines]
     y_score = np.array([float(x[2]) for x in splitlines])
 
-    _plot_roc_curve_single_class(y_gt, y_score, attr_name)
+    if plot:
+        _plot_roc_curve_single_class(y_gt, y_score, attr_name)
     return average_precision_score(y_gt, y_score)
 
 def roc_curve_multi_attribute(attrpath,

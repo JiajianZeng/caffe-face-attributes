@@ -23,13 +23,44 @@ def get_minibatch(roidb, num_classes):
         'num_images ({}) must divide BATCH_SIZE ({})'. \
         format(num_images, cfg.TRAIN.BATCH_SIZE)
     rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images
-    fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
+    fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image).astype(np.int)
 
     # Get the input image blob, formatted for caffe
     im_blob, im_scales = _get_image_blob(roidb, random_scale_inds)
 
     blobs = {'data': im_blob}
 
+    """if cfg.TRAIN.HAS_RPN:
+        # gt boxes: (x1, y1, x2, y2, cls)
+        gt_boxes = np.zeros((0, 5), dtype=np.float32)
+
+        # im_info: (h, w, scale)
+        im_info = np.zeros((0, 3), dtype=np.float32)
+
+        # face_attrs: (face_attr1, face_attr2,...,face_attr40)
+        face_attrs = np.zeros((0, 40), dtype=np.int32)
+
+        for im_i in xrange(num_images):
+            gt_inds = np.where(roidb[im_i]['gt_classes'] != 0)[0]
+            gt_boxes_this_image = np.empty((len(gt_inds), 5), dtype=np.float32)
+            gt_boxes_this_image[:, 0:4] = roidb[im_i]['boxes'][gt_inds, :] * im_scales[0]
+            gt_boxes_this_image[:, 4] = roidb[im_i]['gt_classes'][gt_inds]
+            gt_boxes = np.vstack((gt_boxes, gt_boxes_this_image))
+
+            face_attrs_this_image = np.array(
+                [[face_attr for face_attr in roidb[im_i]['face_attrs']]],
+                dtype=np.int32)
+            face_attrs = np.vstack((face_attrs, face_attrs_this_image))
+
+            im_info_this_image = np.array(
+                [[im_blob.shape[2], im_blob.shape[3], im_scales[im_i]]],
+                dtype=np.float32)
+            im_info = np.vstack((im_info, im_info_this_image))
+
+        blobs['gt_boxes'] = gt_boxes
+        if cfg.TRAIN.USE_FACE_ATTRIBUTES:
+            blobs['face_attrs'] = face_attrs
+        blobs['im_info'] = im_info"""
     if cfg.TRAIN.HAS_RPN:
         assert len(im_scales) == 1, "Single batch only"
         assert len(roidb) == 1, "Single batch only"
@@ -42,7 +73,12 @@ def get_minibatch(roidb, num_classes):
         blobs['im_info'] = np.array(
             [[im_blob.shape[2], im_blob.shape[3], im_scales[0]]],
             dtype=np.float32)
-    else: # not using RPN
+        face_attrs = np.array(
+            [[face_attr for face_attr in roidb[0]['face_attrs']]],
+            dtype=np.int32)
+        if cfg.TRAIN.USE_FACE_ATTRIBUTES:
+            blobs['face_attrs'] = face_attrs
+    else:  # not using RPN
         # Now, build the region of interest and label blobs
         # and face_attrs
         rois_blob = np.zeros((0, 5), dtype=np.float32)
@@ -123,18 +159,18 @@ def _sample_rois(roidb, fg_rois_per_image, rois_per_image, num_classes):
     rois = roidb['boxes']
 
     # Select foreground RoIs as those with >= FG_THRESH overlap
-    fg_inds = np.where(overlaps >= cfg.TRAIN.FG_THRESH)[0]
+    fg_inds = np.where(overlaps >= cfg.TRAIN.FG_THRESH)[0].astype(np.int)
     # Guard against the case when an image has fewer than fg_rois_per_image
     # foreground RoIs
     fg_rois_per_this_image = np.minimum(fg_rois_per_image, fg_inds.size)
     # Sample foreground regions without replacement
     if fg_inds.size > 0:
         fg_inds = npr.choice(
-                fg_inds, size=fg_rois_per_this_image, replace=False)
+                fg_inds, size=fg_rois_per_this_image, replace=False).astype(np.int)
 
     # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
     bg_inds = np.where((overlaps < cfg.TRAIN.BG_THRESH_HI) &
-                       (overlaps >= cfg.TRAIN.BG_THRESH_LO))[0]
+                       (overlaps >= cfg.TRAIN.BG_THRESH_LO))[0].astype(np.int)
     # Compute number of background RoIs to take from this image (guarding
     # against there being fewer than desired)
     bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
@@ -143,7 +179,7 @@ def _sample_rois(roidb, fg_rois_per_image, rois_per_image, num_classes):
     # Sample foreground regions without replacement
     if bg_inds.size > 0:
         bg_inds = npr.choice(
-                bg_inds, size=bg_rois_per_this_image, replace=False)
+                bg_inds, size=bg_rois_per_this_image, replace=False).astype(np.int)
 
     # The indices that we're selecting (both fg and bg)
     keep_inds = np.append(fg_inds, bg_inds)
@@ -251,7 +287,7 @@ def _fixed_sample_rois(roidb, num_classes):
         if len(inds_this_class) == 0:
             gt_overlaps_this_class = gt_overlaps[:, i]
             fixed_fg_inds.append(np.argmax(gt_overlaps_this_class))
-            print 'No class {:d} detected in image {:s}.'.format(i, roidb['image'])
+            #print 'No class {:d} detected in image {:s}.'.format(i, roidb['image'])
         else:
             fg_max_overlaps_this_class = fg_max_overlaps[inds_this_class]
             fixed_fg_inds.append(fg_inds[inds_this_class[np.argmax(fg_max_overlaps_this_class)]])
@@ -259,11 +295,11 @@ def _fixed_sample_rois(roidb, num_classes):
 
     # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
     fixed_bg_inds = np.where((max_overlaps < cfg.TRAIN.BG_THRESH_HI) &
-                       (max_overlaps >= cfg.TRAIN.BG_THRESH_LO))[0]
+                       (max_overlaps >= cfg.TRAIN.BG_THRESH_LO))[0].astype(np.int)
     # Sample background regions without replacement
     if fixed_bg_inds.size > 0:
         fixed_bg_inds = npr.choice(
-                fixed_bg_inds, size=cfg.TRAIN.BG_SIZE, replace=False)
+                fixed_bg_inds, size=cfg.TRAIN.BG_SIZE, replace=False).astype(np.int)
 
     # The indices that we're selecting (both fg and bg)
     keep_inds = np.append(fixed_fg_inds, fixed_bg_inds)

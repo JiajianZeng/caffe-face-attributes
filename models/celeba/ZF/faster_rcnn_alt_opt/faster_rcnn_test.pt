@@ -337,7 +337,6 @@ layer {
 }
 
 #========= Select RoIs for fixed classed ============
-
 layer {
   name: 'select_rois'
   type: 'Python'

@@ -39,15 +39,14 @@ case $DATASET in
     ;;
 esac
 
-LOG="experiments/logs/plain_zf_${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
-exec &> >(tee -a "$LOG")
-echo Logging output to "$LOG"
+#LOG="experiments/logs/plain_${NET}_${DATASET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
+#exec &> (tee -a "$LOG")
+#echo Logging output to "$LOG"
 
 # for celeba, fine-tuned from PAN, fix BNN
 # --weights data/imagenet_models/${NET}.v2.caffemodel \
-#time ./tools/train_plain_zf_for_face_attributes.py --gpu ${GPU_ID} \
+# time ./tools/train_plain_zf_for_face_attributes.py --gpu ${GPU_ID} \
 #  --net_name ${NET} \
-#  --weights data/imagenet_models/${NET}.v2.caffemodel \
 #  --imdb ${TRAIN_IMDB} \
 #  --cfg experiments/cfgs/plain_zf_for_face_attributes.yml \
 #  ${EXTRA_ARGS}
@@ -62,7 +61,7 @@ echo Logging output to "$LOG"
 
 set +x
 #NET_FINAL=`grep "Final model:" ${LOG} | awk '{print $3}'`
-NET_FINAL="output/plain_zf/celeba_trainval/plain_zf_plain_zf_iter_100000.caffemodel"
+NET_FINAL="output/plain_zf/celeba_trainval/plain_zf_celeba_iter_100000.caffemodel"
 set -x
 
 time ./tools/test_net_plain_zf.py --gpu ${GPU_ID} \

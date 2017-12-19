@@ -23,7 +23,7 @@ class ProposalLayer(caffe.Layer):
 
     def setup(self, bottom, top):
         # parse the layer parameter string, which must be valid YAML
-        layer_params = yaml.load(self.param_str_)
+        layer_params = yaml.load(self.param_str)
 
         self._feat_stride = layer_params['feat_stride']
         anchor_scales = layer_params.get('scales', (8, 16, 32))
@@ -39,7 +39,10 @@ class ProposalLayer(caffe.Layer):
         # (n, x1, y1, x2, y2) specifying an image batch index n and a
         # rectangle (x1, y1, x2, y2)
         # top[0].reshape(1, 5)
-        cfg_key = str(self.phase)  # either 'TRAIN' or 'TEST'
+        cfg_key = 'TRAIN'
+        if self.phase:
+          cfg_key = 'TEST'
+        #cfg_key = str(self.phase)  # either 'TRAIN' or 'TEST'
         post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
         top[0].reshape(post_nms_topN, 5)
 
@@ -63,8 +66,10 @@ class ProposalLayer(caffe.Layer):
 
         assert bottom[0].data.shape[0] == 1, \
             'Only single item batches are supported'
-
-        cfg_key = str(self.phase) # either 'TRAIN' or 'TEST'
+        cfg_key = 'TRAIN'
+        if self.phase:
+          cfg_key = 'TEST'
+        #cfg_key = str(self.phase) # either 'TRAIN' or 'TEST'
         pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N
         post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
         nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH

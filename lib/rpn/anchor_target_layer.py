@@ -24,7 +24,7 @@ class AnchorTargetLayer(caffe.Layer):
     """
 
     def setup(self, bottom, top):
-        layer_params = yaml.load(self.param_str_)
+        layer_params = yaml.load(self.param_str)
         anchor_scales = layer_params.get('scales', (8, 16, 32))
         self._anchors = generate_anchors(scales=np.array(anchor_scales))
         self._num_anchors = self._anchors.shape[0]
@@ -155,18 +155,18 @@ class AnchorTargetLayer(caffe.Layer):
 
         # subsample positive labels if we have too many
         num_fg = int(cfg.TRAIN.RPN_FG_FRACTION * cfg.TRAIN.RPN_BATCHSIZE)
-        fg_inds = np.where(labels == 1)[0]
+        fg_inds = np.where(labels == 1)[0].astype(np.int)
         if len(fg_inds) > num_fg:
             disable_inds = npr.choice(
-                fg_inds, size=(len(fg_inds) - num_fg), replace=False)
+                fg_inds, size=(len(fg_inds) - num_fg), replace=False).astype(np.int)
             labels[disable_inds] = -1
 
         # subsample negative labels if we have too many
         num_bg = cfg.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
-        bg_inds = np.where(labels == 0)[0]
+        bg_inds = np.where(labels == 0)[0].astype(np.int)
         if len(bg_inds) > num_bg:
             disable_inds = npr.choice(
-                bg_inds, size=(len(bg_inds) - num_bg), replace=False)
+                bg_inds, size=(len(bg_inds) - num_bg), replace=False).astype(np.int)
             labels[disable_inds] = -1
             #print "was %s inds, disabling %s, now %s inds" % (
                 #len(bg_inds), len(disable_inds), np.sum(labels == 0))

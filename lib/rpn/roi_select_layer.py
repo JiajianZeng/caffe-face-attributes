@@ -12,7 +12,7 @@ class RoISelectLayer(caffe.Layer):
 
     def setup(self, bottom, top):
         # parse the layer parameter string, which must be valid YAML
-        layer_params = yaml.load(self.param_str_)
+        layer_params = yaml.load(self.param_str)
         self._num_class = layer_params['num_class']
 
         if DEBUG:
@@ -22,7 +22,8 @@ class RoISelectLayer(caffe.Layer):
         # (n, x1, y1, x2, y2) specifying an image batch index n and a
         # rectangle (x1, y1, x2, y2)
         # top[0].reshape(num_class, 5)
-        top[0].reshape(self._num_class, 5)
+        # exclude background
+        top[0].reshape(self._num_class - 1, 5)
 
     def forward(self, bottom, top):
         # the input rois and corresponding scores
@@ -49,7 +50,7 @@ class RoISelectLayer(caffe.Layer):
             if len(inds_this_class) == 0:
                 scores_this_class = input_scores[:, i]
                 fg_inds.append(np.argmax(scores_this_class))
-                print 'No class {:d} detected in the input image.'.format(i)
+                #print 'No class {:d} detected in the input image.'.format(i)
             else:
                 max_scores_this_class = max_scores[inds_this_class]
                 max_score_ind = np.argmax(max_scores_this_class)
@@ -57,7 +58,7 @@ class RoISelectLayer(caffe.Layer):
 
         # Select background RoIs
         bg_inds = []
-        inds_background = np.where(labels == 0)[0]
+        """inds_background = np.where(labels == 0)[0]
         if len(inds_background) == 0:
             scores_background = input_scores[:, 0]
             bg_inds.append(np.argmax(scores_background))
@@ -65,9 +66,9 @@ class RoISelectLayer(caffe.Layer):
         else:
             max_scores_background = max_scores[inds_background]
             max_score_ind = np.argmax(max_scores_background)
-            bg_inds.append(inds_background[max_score_ind])
+            bg_inds.append(inds_background[max_score_ind])"""
 
-        keep_inds = np.append(fg_inds, bg_inds)
+        keep_inds = np.append(fg_inds, bg_inds).astype(np.int)
         selected_rois = input_rois[keep_inds]
 
         top[0].reshape(*(selected_rois.shape))

@@ -53,7 +53,7 @@ class SimpleTransformer:
 class CaffeSolver:
 
     """
-    Caffesolver is a class for creating a solver.prototxt file. It sets default
+    Caffesolver is a class for creating a zf_solver.prototxt file. It sets default
     values and can export a solver parameter file.
     Note that all parameters are stored as strings. Strings variables are
     stored as strings in strings.

@@ -19,6 +19,7 @@ import argparse
 import pprint
 import numpy as np
 import sys
+import os.path as osp
 
 def parse_args():
     """
@@ -78,6 +79,8 @@ def combined_roidb(imdb_names):
 
 if __name__ == '__main__':
     args = parse_args()
+
+    cfg.MODELS_DIR = osp.abspath(osp.join(cfg.ROOT_DIR, 'models', 'celeba'))
 
     print('Called with args:')
     print(args)

@@ -101,7 +101,7 @@ def _project_im_rois(im_rois, scales):
 
 def _get_blobs(im, rois):
     """Convert an image and RoIs within that image into network inputs."""
-    blobs = {'data' : None, 'rois':None}
+    blobs = {'data': None, 'rois': None}
     blobs['data'], im_scale_factors = _get_image_blob(im)
     if not cfg.TEST.HAS_RPN:
        blobs['rois'] = _get_rois_blob(rois, im_scale_factors)
@@ -335,7 +335,7 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
     output_dir = get_output_dir(imdb, net)
 
     # timers
-    _t = {'im_attr' : Timer()}
+    _t = {'im_attr': Timer()}
 
     if not cfg.TEST.HAS_RPN:
         roidb = imdb.roidb
@@ -343,7 +343,7 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
     # dataset eval
     # imdb.dataset_eval()
 
-    for i in xrange(1):
+    for i in xrange(num_images):
         # filter out any ground truth boxes
         if cfg.TEST.HAS_RPN:
             box_proposals = None
@@ -355,9 +355,8 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
             # ground truth.
             box_proposals = roidb[i]['boxes'][roidb[i]['gt_classes'] == 0]
 
-
-        k = 2001
-        im = cv2.imread(imdb.image_path_at(k))
+        # k = 2001
+        im = cv2.imread(imdb.image_path_at(i))
         # resize to 178*218
         # im_resized = cv2.resize(im, (178, 218))
 
@@ -367,15 +366,18 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
         # print probs
         # print select_rois
 
-        all_probs[k] = probs
+        all_probs[i] = probs
+
         # draw rois detected on the image
-        '''for j in xrange(select_rois.shape[0]-1):
-                source_im = Image.open(imdb.image_path_at(k))
-                source_draw = ImageDraw.Draw(source_im)
-                source_draw.rectangle(select_rois[j,1:] / 3.37, outline=0x2c2cee)
-                source_im.show()
+        '''
+        for j in xrange(select_rois.shape[0]-1):
+            source_im = Image.open(imdb.image_path_at(k))
+            source_draw = ImageDraw.Draw(source_im)
+            source_draw.rectangle(select_rois[j,1:] / 3.37, outline=0x2c2cee)
+            source_im.show()
         '''
         # write attributes
+        '''
         attributes_present = np.zeros(probs.shape[0])
         for j in xrange(probs.shape[0]):
             if probs[j, 1] >= probs[j, 0]:
@@ -405,6 +407,7 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
 
                 print '{} {}'.format(imdb.face_attributes_name()[j], present)
             file.write('\\hline')
+        '''
 
         print 'im_attr: {:d}/{:d} {:.3f}s' \
               .format(i + 1, num_images, _t['im_attr'].average_time)

@@ -45,7 +45,7 @@ def caffenet(lmdb, batch_size=256, include_acc=False):
         return to_proto(loss)
 
 def make_net():
-    with open('train.prototxt', 'w') as f:
+    with open('zf_train.prototxt', 'w') as f:
         print(caffenet('/path/to/caffe-train-lmdb'), file=f)
 
     with open('test.prototxt', 'w') as f:

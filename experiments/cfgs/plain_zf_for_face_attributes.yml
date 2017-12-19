@@ -1,11 +1,19 @@
+# export dir
 EXP_DIR: plain_zf
+# train stage
 TRAIN:
-  IMS_PER_BATCH: 6
-  USE_FACE_ATTRIBUTES: True
-
+  HAS_RPN: False
+  BBOX_REG: False
+  BBOX_NORMALIZE_TARGETS: False
   ASPECT_GROUPING: False
   USE_FLIPPED: False
-  BBOX_REG: False
+  USE_PREFETCH: False
+
+
+  PROPOSAL_METHOD: 'gt'
+  SNAPSHOT_INFIX: 'celeba'
+  IMS_PER_BATCH: 12
+  USE_FACE_ATTRIBUTES: True
 
 TEST:
   HAS_RPN: True

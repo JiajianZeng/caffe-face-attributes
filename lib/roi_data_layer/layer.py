@@ -84,7 +84,7 @@ class RoIDataLayer(caffe.Layer):
         """Setup the RoIDataLayer."""
 
         # parse the layer parameter string, which must be valid YAML
-        layer_params = yaml.load(self.param_str_)
+        layer_params = yaml.load(self.param_str)
 
         self._num_classes = layer_params['num_classes']
 
@@ -98,13 +98,22 @@ class RoIDataLayer(caffe.Layer):
         idx += 1
 
         if cfg.TRAIN.HAS_RPN:
-            top[idx].reshape(1, 3)
+            top[idx].reshape(cfg.TRAIN.IMS_PER_BATCH, 3)
             self._name_to_top_map['im_info'] = idx
             idx += 1
 
-            top[idx].reshape(1, 4)
+            # actually, this reshape is of no use
+            # since for every image (or a batch of images) the total number of gt boxes is
+            # unknown
+            top[idx].reshape(1, 5)
             self._name_to_top_map['gt_boxes'] = idx
             idx += 1
+
+            # face attributes blob: 40 categorical face attributes
+            if cfg.TRAIN.USE_FACE_ATTRIBUTES:
+                top[idx].reshape(cfg.TRAIN.IMS_PER_BATCH, 40)
+                self._name_to_top_map['face_attrs'] = idx
+                idx += 1
         else: # not using RPN
             # rois blob: holds R regions of interest, each is a 5-tuple
             # (n, x1, y1, x2, y2) specifying an image batch index n and a

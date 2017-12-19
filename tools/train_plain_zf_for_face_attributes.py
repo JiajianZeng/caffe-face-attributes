@@ -7,10 +7,7 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
-"""Train a Faster R-CNN network using alternating optimization.
-This tool implements the alternating optimization algorithm described in our
-NIPS 2015 paper ("Faster R-CNN: Towards Real-time Object Detection with Region
-Proposal Networks." Shaoqing Ren, Kaiming He, Ross Girshick, Jian Sun.)
+"""Train a plain ZF network for face attributes prediction using CelebA or LFWA dataset.
 """
 
 import _init_paths
@@ -30,7 +27,7 @@ def parse_args():
     """
     Parse input arguments
     """
-    parser = argparse.ArgumentParser(description='Train a Faster R-CNN network')
+    parser = argparse.ArgumentParser(description='Train a plain ZF network for face attributes')
     parser.add_argument('--gpu', dest='gpu_id',
                         help='GPU device id to use [0]',
                         default=0, type=int)
@@ -57,13 +54,12 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def get_roidb(imdb_name, rpn_file=None):
+def get_roidb(imdb_name):
     imdb = get_imdb(imdb_name)
     print 'Loaded dataset `{:s}` for training'.format(imdb.name)
-    imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
-    print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)
-    if rpn_file is not None:
-        imdb.config['rpn_file'] = rpn_file
+    # set proposal method 'gt' to make this imdb load annotation
+    imdb.set_proposal_method('gt')
+
     roidb = get_training_roidb(imdb)
     return roidb, imdb
 
@@ -74,9 +70,6 @@ def get_solvers(net_name):
     solvers = [os.path.join(cfg.MODELS_DIR, *s) for s in solvers]
     # Iterations
     max_iters = [100000]
-    # max_iters = [16000, 4000, 16000, 4000] for lfwa first experiment
-    # max_iters = [16000, 16000, 16000, 16000]
-    # max_iters = [100, 100, 100, 100]
     return solvers, max_iters
 
 # ------------------------------------------------------------------------------
@@ -85,7 +78,7 @@ def get_solvers(net_name):
 # stage is executed in a separate process using multiprocessing.Process.
 # ------------------------------------------------------------------------------
 
-def _init_caffe(cfg):
+def _init_caffe(gpu_id):
     """Initialize pycaffe in a training process.
     """
 
@@ -95,22 +88,18 @@ def _init_caffe(cfg):
     caffe.set_random_seed(cfg.RNG_SEED)
     # set up caffe
     caffe.set_mode_gpu()
-    caffe.set_device(cfg.GPU_ID)
+    caffe.set_device(gpu_id)
 
 def train_plain_zf(queue=None, imdb_name=None, init_model=None, solver=None,
                     max_iters=None, cfg=None):
     """Train a plain ZF for face attributes prediction.
     """
-
-    cfg.TRAIN.HAS_RPN = False           # not generating proposals on-the-fly
-    cfg.TRAIN.PROPOSAL_METHOD = 'gt'   # use ground-truth bounding boxes
-
     print 'Init model: {}'.format(init_model)
     print('Using config:')
     pprint.pprint(cfg)
 
     # initialize caffe
-    _init_caffe(cfg)
+    _init_caffe(cfg.GPU_ID)
 
     roidb, imdb = get_roidb(imdb_name)
     output_dir = get_output_dir(imdb)
@@ -120,8 +109,8 @@ def train_plain_zf(queue=None, imdb_name=None, init_model=None, solver=None,
                             pretrained_model=init_model,
                             max_iters=max_iters)
     # Cleanup all but the final model
-    for i in model_paths[:-1]:
-        os.remove(i)
+    #for i in model_paths[:-1]:
+        #os.remove(i)
     plain_zf_model_path = model_paths[-1]
     # Send plain ZF model path over the multiprocessing queue
     queue.put({'model_path': plain_zf_model_path})
@@ -145,18 +134,18 @@ if __name__ == '__main__':
     # multiprocessing.Process.
     # --------------------------------------------------------------------------
 
-    if cfg.TRAIN.USE_FACE_ATTRIBUTES:
-        cfg.MODELS_DIR = osp.abspath(osp.join(cfg.ROOT_DIR, 'models', 'celeba'))
+    cfg.MODELS_DIR = osp.abspath(osp.join(cfg.ROOT_DIR, 'models', 'celeba'))
+    #cfg.MODELS_DIR = osp.abspath(osp.join(cfg.ROOT_DIR, 'models', 'lfwa'))
+
     # queue for communicated results between processes
     mp_queue = mp.Queue()
     # solves, iters, etc.
     solvers, max_iters = get_solvers(args.net_name)
 
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-    print 'Plain ZF, init from ImageNet model'
+    print 'Plain ZF, for face attributes prediction using CelebA dataset'
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
-    cfg.TRAIN.SNAPSHOT_INFIX = 'plain_zf'
     mp_kwargs = dict(
             queue=mp_queue,
             imdb_name=args.imdb_name,
@@ -172,7 +161,10 @@ if __name__ == '__main__':
     # Create final model (just a copy of the last stage)
     final_path = os.path.join(
             os.path.dirname(plain_zf_out['model_path']),
-            args.net_name + '_plain_zf_final.caffemodel')
+            'celeba_plain_zf_final.caffemodel')
+    #final_path = os.path.join(
+        #os.path.dirname(plain_zf_out['model_path']),
+        #'lfwa_plain_zf_final.caffemodel')
     print 'cp {} -> {}'.format(
         plain_zf_out['model_path'], final_path)
     shutil.copy(plain_zf_out['model_path'], final_path)

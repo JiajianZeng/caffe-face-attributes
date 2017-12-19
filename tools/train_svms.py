@@ -53,7 +53,7 @@ class SVMTrainer(object):
         total_norm = 0.0
         count = 0.0
         inds = npr.choice(xrange(self.imdb.num_images), size=num_images,
-                          replace=False)
+                          replace=False).astype(np.int)
         for i_, i in enumerate(inds):
             im = cv2.imread(self.imdb.image_path_at(i))
             if roidb[i]['flipped']:

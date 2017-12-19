@@ -5,7 +5,7 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
-"""Test a Fast R-CNN network on an imdb (image database)."""
+"""Test a ZF network on an imdb (image database)."""
 
 from fast_rcnn.config import cfg, get_output_dir
 from fast_rcnn.bbox_transform import clip_boxes, bbox_transform_inv
@@ -180,7 +180,7 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
     output_dir = get_output_dir(imdb, net)
 
     # timers
-    _t = {'im_attr' : Timer()}
+    _t = {'im_attr': Timer()}
 
     if not cfg.TEST.HAS_RPN:
         roidb = imdb.roidb

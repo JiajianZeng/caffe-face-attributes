@@ -166,7 +166,7 @@ class CaffeTrainLogAnalyzer(CaffeLogAnalyzer):
   def __init__(self, log, start, end, step, loss='loss', info=None):
     CaffeLogAnalyzer.__init__(self, log, start, end, step, loss, info)
     self._stage = 'train'
-    self._stage_re = r'Iteration ([0-9]+), loss = ([0-9]*\.?[0-9]*)'
+    self._stage_re = r'Iteration ([0-9]+).*, loss = ([0-9]*\.?[0-9]*)'
     self._loss_re = self.loss + r' = ([0-9]*\.?[0-9]*) \(\* ([0-9]*\.?[0-9]*) = ([0-9]*\.?[0-9]*) loss\)'
     self._lr_re = r'Iteration ([0-9]+), lr = ([0-9]*\.?[0-9]*)'
     self._total_loss = (self.loss == 'loss')

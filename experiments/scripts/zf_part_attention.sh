@@ -55,20 +55,22 @@ esac
 #echo Logging output to "$LOG"
 
 #--weights data/imagenet_models/${NET}.v2.caffemodel \
-time ./tools/train_net.py --gpu ${GPU_ID} \
-  --solver models/${PT_DIR}/${NET}/faster_rcnn_end2end/solver.prototxt \
-  --imdb ${TRAIN_IMDB} \
-  --iters ${ITERS} \
-  --cfg experiments/cfgs/faster_rcnn_end2end.yml \
-  ${EXTRA_ARGS}
-
-#set +x
-#NET_FINAL=`grep -B 1 "done solving" ${LOG} | grep "Wrote snapshot" | awk '{print $4}'`
-#set -x
-
-#time ./tools/test_net.py --gpu ${GPU_ID} \
-#  --def models/${PT_DIR}/${NET}/faster_rcnn_end2end/test.prototxt \
-#  --net ${NET_FINAL} \
-#  --imdb ${TEST_IMDB} \
+#time ./tools/train_net.py --gpu ${GPU_ID} \
+#  --solver models/${PT_DIR}/${NET}/faster_rcnn_end2end/zf_part_attention_solver.prototxt \
+#  --weights data/faster_rcnn_models/ZF_faster_rcnn_final.caffemodel \
+#  --imdb ${TRAIN_IMDB} \
+#  --iters ${ITERS} \
 #  --cfg experiments/cfgs/faster_rcnn_end2end.yml \
 #  ${EXTRA_ARGS}
+
+set +x
+#NET_FINAL=`grep -B 1 "done solving" ${LOG} | grep "Wrote snapshot" | awk '{print $4}'`
+NET_FINAL="output/faster_rcnn_zf_end2end/celeba_trainval/zf_part_attention_e2e_iter_250000.caffemodel"
+set -x
+
+time ./tools/test_net.py --gpu ${GPU_ID} \
+  --def models/${PT_DIR}/${NET}/faster_rcnn_end2end/zf_part_attention_test.prototxt \
+  --net ${NET_FINAL} \
+  --imdb ${TEST_IMDB} \
+  --cfg experiments/cfgs/faster_rcnn_end2end.yml \
+  ${EXTRA_ARGS}
