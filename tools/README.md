@@ -1,1 +1,1 @@
-Tools for training, testing, and compressing Fast R-CNN networks.
+Tools for training, testing, and compressing Face Attribute Classification networks.
