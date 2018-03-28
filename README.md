@@ -61,52 +61,33 @@ This implementation is based on [*Faster* R-CNN](https://github.com/rbgirshick/p
   These models were trained on VOC 2007 trainval.
     
 ### Beyond the demo: installation for training and testing models
-1. Download the training, validation, test data and VOCdevkit
+1. Download the [Attributedevkit](http://10.214.143.222:5000). The directory is */disk50/graduate-doc/zengjiajian/Dataset*.
+
+2. I'll upload the devkit to Google Drive in the near future for your convenience.
+
+3. Extract the tar file into one directory named `Attributedevkit`
 
 	```Shell
-	wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
-	wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
-	wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCdevkit_08-Jun-2007.tar
+	tar xvf Attributedekit.tar
 	```
-
-2. Extract all of these tars into one directory named `VOCdevkit`
-
-	```Shell
-	tar xvf VOCtrainval_06-Nov-2007.tar
-	tar xvf VOCtest_06-Nov-2007.tar
-	tar xvf VOCdevkit_08-Jun-2007.tar
+	
+4. Create symlinks for the Attributedevkit
 	```
-
-3. It should have this basic structure
-
-	```Shell
-  	$VOCdevkit/                           # development kit
-  	$VOCdevkit/VOCcode/                   # VOC utility code
-  	$VOCdevkit/VOC2007                    # image sets, annotations, etc.
-  	# ... and several other directories ...
-  	```
-
-4. Create symlinks for the PASCAL VOC dataset
-
-	```Shell
-    cd $FRCN_ROOT/data
-    ln -s $VOCdevkit VOCdevkit2007
-    ```
-    Using symlinks is a good idea because you will likely want to share the same PASCAL dataset installation between multiple projects.
-5. [Optional] follow similar steps to get PASCAL VOC 2010 and 2012
-6. [Optional] If you want to use COCO, please see some notes under `data/README.md`
-7. Follow the next sections to download pre-trained ImageNet models
+	cd $CFA_ROOT/data
+	ln -s $Attributedevkit CelebAdevkit
+	```
+	
+	
+5. Follow the next sections to download pre-trained ImageNet models
 
 ### Download pre-trained ImageNet models
-
-Pre-trained ImageNet models can be downloaded for the three networks described in the paper: ZF and VGG16.
 
 ```Shell
 cd $FRCN_ROOT
 ./data/scripts/fetch_imagenet_models.sh
 ```
 VGG16 comes from the [Caffe Model Zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo), but is provided here for your convenience.
-ZF was trained at MSRA.
+ZF was trained at MSRA by the author of *Faster* R-CNN.
 
 ### Usage
 
