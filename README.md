@@ -22,42 +22,43 @@ This implementation is based on [*Faster* R-CNN](https://github.com/rbgirshick/p
   ```
 
   You can download [Makefile.config](http://www.cs.berkeley.edu/~rbg/fast-rcnn-data/Makefile.config) provided by the author of *Faster* R-CNN for reference.
+  
 2. Python packages you might not have: `cython`, `python-opencv`, `easydict`
 
 ### Installation (sufficient for the demo)
 
 1. Clone the caffe-face-attributes repository
-  ```Shell
+  ```
   git clone https://github.com/JiajianZeng/caffe-face-attributes.git
   ```
-
+  
 2. We'll call the directory that you cloned caffe-face-attributes into `CFA_ROOT`
 
 3. Build the Cython modules
-    ```Shell
-    cd $CFA_ROOT/lib
-    make
-    ```
-    
+  ```
+  cd $CFA_ROOT/lib
+  make
+  ```
+  
 4. Build Caffe and pycaffe
-    ```Shell
-    cd $CFA_ROOT/caffe
-    # Now follow the Caffe installation instructions here:
-    #   http://caffe.berkeleyvision.org/installation.html
+  ```Shell
+  cd $CFA_ROOT/caffe
+  # Now follow the Caffe installation instructions here:
+  # http://caffe.berkeleyvision.org/installation.html
 
-    # If you're experienced with Caffe and have all of the requirements installed
-    # and your Makefile.config in place, then simply do:
-    make -j8 && make pycaffe
-    ```
+  # If you're experienced with Caffe and have all of the requirements installed
+  # and your Makefile.config in place, then simply do:
+  make -j8 && make pycaffe
+  ```
 
 5. Download pre-computed Faster R-CNN detectors
-    ```Shell
-    cd $CFA_ROOT
-    ./data/scripts/fetch_faster_rcnn_models.sh
-    ```
+  ```
+  cd $CFA_ROOT
+  ./data/scripts/fetch_faster_rcnn_models.sh
+  ```
     
-    This will populate the `$CFA_ROOT/data` folder with `faster_rcnn_models`. See `data/README.md` for details.
-    These models were trained on VOC 2007 trainval.
+  This will populate the `$CFA_ROOT/data` folder with `faster_rcnn_models`. See `data/README.md` for details.
+  These models were trained on VOC 2007 trainval.
     
 ### Beyond the demo: installation for training and testing models
 1. Download the training, validation, test data and VOCdevkit
