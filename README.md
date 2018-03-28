@@ -68,7 +68,7 @@ This implementation is based on [*Faster* R-CNN](https://github.com/rbgirshick/p
 3. Extract the tar file into one directory named `Attributedevkit`
 
 	```Shell
-	tar xvf Attributedekit.tar
+	tar xzvf Attributedekit.tar.gz
 	```
 	
 4. Create symlinks for the Attributedevkit
