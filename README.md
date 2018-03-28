@@ -83,7 +83,7 @@ This implementation is based on [*Faster* R-CNN](https://github.com/rbgirshick/p
 ### Download pre-trained ImageNet models
 
 ```Shell
-cd $FRCN_ROOT
+cd $CFA_ROOT
 ./data/scripts/fetch_imagenet_models.sh
 ```
 VGG16 comes from the [Caffe Model Zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo), but is provided here for your convenience.
